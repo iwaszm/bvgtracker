@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abfahrtsmonitor Berlin</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --bvg-yellow: #F0E400;
+      --bvg-bg: #222222;
+      --bvg-sidebar-bg: #2b2b2b;
+      --bvg-card-bg: #383838;
+      --bvg-text: #ffffff;
+      --db-red: #EC0016; /* DB 官方红 */
+    }
+
+    body {
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      margin: 0;
+      background-color: var(--bvg-bg);
+      color: var(--bvg-text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #app {
+      display: flex;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* 左侧边栏 */
+    .sidebar {
+      width: 380px;
+      min-width: 320px;
+      height: 100%;
+      background-color: var(--bvg-sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #444;
+      z-index: 1000;
+    }
+
+    /* 右侧地图 */
+    .map-container {
+      flex-grow: 1;
+      height: 100%;
+      position: relative;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+      z-index: 1;
+    }
+
+    /* 1. 时间显示区域 */
+    .section-time {
+      padding: 15px;
+      text-align: center;
+      background-color: #1a1a1a;
+      border-bottom: 1px solid #444;
+    }
+
+    .clock-display {
+      font-family: 'Courier New', monospace;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--bvg-yellow);
+      letter-spacing: 2px;
+    }
+
+    /* 2. 搜索区域 */
+    .section-search {
+      padding: 15px;
+      border-bottom: 1px solid #444;
+      background-color: var(--bvg-sidebar-bg);
+      position: relative;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+    }
+
+    .form-control-dark {
+      background-color: #1a1a1a;
+      border: 1px solid #555;
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 6px;
+      width: 100%;
+    }
+
+    .form-control-dark:focus {
+      background-color: #1a1a1a;
+      border-color: var(--bvg-yellow);
+      color: #fff;
+      box-shadow: 0 0 0 0.2rem rgba(240, 228, 0, 0.25);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+    }
+    
+    .clear-btn:hover { color: #fff; }
+
+    /* 搜索结果下拉 */
+    .search-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 15px; 
+      right: 15px;
+      background-color: #333;
+      border: 1px solid #555;
+      border-top: none;
+      z-index: 2000;
+      max-height: 300px;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      border-radius: 0 0 6px 6px;
+    }
+
+    .search-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #444;
+    }
+
+    .search-item:hover { background-color: #444; }
+    .search-item:last-child { border-bottom: none; }
+    
+    .star-icon { cursor: pointer; color: #666; transition: color 0.2s; }
+    .star-icon:hover { color: var(--bvg-yellow); }
+    .star-icon.starred { color: var(--bvg-yellow); }
+
+    /* 3. 信息列表区域 (Info) */
+    .section-info {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .section-info::-webkit-scrollbar {
+      width: 6px;
+    }
+    .section-info::-webkit-scrollbar-track {
+      background: #222;
+    }
+    .section-info::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 3px;
+    }
+
+    /* 巴士卡片样式 */
+    .bus-card {
+      background-color: var(--bvg-card-bg);
+      margin-bottom: 10px;
+      border-radius: 6px;
+      padding: 12px;
+      transition: all 0.2s ease;
+      border-left: 4px solid #666;
+    }
+
+    .bus-card:hover {
+      background-color: #444;
+      transform: translateX(4px);
+    }
+
+    .bus-card.departed {
+      opacity: 0.5;
+      filter: grayscale(1);
+    }
+
+    .product-bus { border-left-color: #A5027D; }
+    .product-tram { border-left-color: #CC0000; }
+    .product-subway { border-left-color: #006747; }
+    .product-suburban { border-left-color: #008D4F; }
+    .product-regional { border-left-color: var(--db-red); } /* RE/RB 使用 DB 红 */
+    .product-express { border-left-color: #ffffff; } /* ICE/IC */
+
+    /* 呼吸灯效果 Keyframes */
+    @keyframes breathe {
+      0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+      70% { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+    }
+    
+    @keyframes breathe-green {
+      0% { box-shadow: 0 0 0 0 rgba(77, 255, 77, 0.6); }
+      70% { box-shadow: 0 0 0 5px rgba(77, 255, 77, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(77, 255, 77, 0); }
+    }
+    
+    @keyframes breathe-orange {
+      0% { box-shadow: 0 0 0 0 rgba(255, 170, 0, 0.6); }
+      70% { box-shadow: 0 0 0 5px rgba(255, 170, 0, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 170, 0, 0); }
+    }
+    
+    @keyframes breathe-red {
+      0% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.6); }
+      70% { box-shadow: 0 0 0 5px rgba(255, 51, 51, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0); }
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-left: 8px; /* 灯与时间的间距 */
+      flex-shrink: 0;
+      transform: translateY(1px); 
+    }
+    
+    .status-green { 
+      background-color: #4dff4d; 
+      animation: breathe-green 2s infinite; 
+    }
+    .status-orange { 
+      background-color: #ffaa00; 
+      animation: breathe-orange 2s infinite; 
+    }
+    .status-red { 
+      background-color: #ff3333; 
+      animation: breathe-red 2s infinite; 
+    }
+
+    .line-badge {
+      background-color: #fff;
+      color: #000;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9rem;
+      min-width: 45px;
+      text-align: center;
+      display: inline-block;
+      flex-shrink: 0;
+      margin-right: 8px;
+    }
+    
+    .product-subway .line-badge { background-color: #0063A5; color: white; }
+    .product-suburban .line-badge { background-color: #008D4F; color: white; }
+    .product-tram .line-badge { background-color: #CC0000; color: white; }
+    .product-bus .line-badge { background-color: #A5027D; color: white; }
+    .product-regional .line-badge { background-color: var(--db-red); color: white; } /* RE/RB Badge 颜色 */
+
+    .dest-text {
+      font-size: 0.95rem;
+      color: #eee;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .remarks-text {
+      font-size: 0.75rem;
+      color: #aaa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+      min-height: 1.2em;
+    }
+
+    .time-large {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .time-sub {
+      font-size: 0.75rem;
+      color: #aaa;
+      text-align: right;
+    }
+
+    @media (max-width: 768px) {
+      #app { flex-direction: column; }
+      .sidebar { width: 100%; height: 60%; order: 2; border-right: none; border-top: 1px solid #444; }
+      .map-container { height: 40%; order: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 左侧 Sidebar -->
+    <div class="sidebar">
+      
+      <!-- 1. 时间 -->
+      <div class="section-time">
+        <div class="clock-display">{{ currentTime }}</div>
+      </div>
+
+      <!-- 2. 搜索 -->
+      <div class="section-search">
+        <div class="search-input-wrapper">
+          <input
+            class="form-control-dark"
+            type="text"
+            placeholder="Haltestelle suchen..."
+            v-model="searchQuery"
+            @input="onSearchInput"
+          />
+          <button v-if="searchQuery" @click="clearSearch" class="clear-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- 搜索结果列表 (浮动) -->
+        <div class="search-dropdown" v-if="searchResults.length > 0">
+          <div
+            class="search-item"
+            v-for="station in searchResults"
+            :key="station.id"
+            @click="selectStation(station)"
+          >
+            <div>
+              <i class="fas fa-map-marker-alt me-2 text-muted"></i>
+              {{ station.name }}
+            </div>
+            <i 
+              class="fa-star star-icon"
+              :class="isStarred(station) ? 'fas starred' : 'far'"
+              @click.stop="toggleStar(station)"
+            ></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 信息列表 (Info) -->
+      <div class="section-info">
+        
+        <!-- Loading -->
+        <div v-if="loading" class="text-center py-4">
+          <div class="spinner-border text-warning" role="status"></div>
+          <div class="mt-2 small text-muted">Lade Abfahrten...</div>
+        </div>
+
+        <!-- 空状态 -->
+        <div v-if="!loading && currentStation && departures.length === 0" class="alert alert-dark border-secondary text-center">
+          <small>Keine Abfahrten in den nächsten 20 Min.</small>
+        </div>
+
+        <!-- 引导信息 -->
+        <div v-if="!currentStation && !loading && searchResults.length === 0" class="text-center text-muted mt-5">
+          <i class="fas fa-arrow-up mb-2"></i><br>
+          Bitte suchen Sie nach einer Haltestelle.
+        </div>
+
+        <!-- 列表内容 -->
+        <div
+          class="bus-card"
+          v-for="dep in departures"
+          :key="dep.tripId"
+          :class="[getProductClass(dep.line.product), { departed: isDeparted(dep) }]"
+          @click="focusMap(dep)"
+        >
+          <div class="d-flex justify-content-between align-items-start">
+            
+            <!-- 左侧：线路 + 方向 (并排) + 下方留白/Remark -->
+            <div class="d-flex flex-column justify-content-center" style="max-width: 65%; overflow: hidden;">
+              <!-- 第一行：Badge + 终点站 -->
+              <div class="d-flex align-items-center">
+                <span class="line-badge">{{ dep.line.name }}</span>
+                <div class="dest-text" :title="dep.direction">
+                  {{ dep.direction }}
+                </div>
+              </div>
+              <!-- 第二行：特别信息 -->
+              <div class="remarks-text" :title="getRemarkText(dep)">
+                 {{ getRemarkText(dep) }}
+              </div>
+            </div>
+
+            <!-- 右侧：倒计时(上) + 绝对时间&灯(下) -->
+            <div class="d-flex flex-column align-items-end">
+              
+              <!-- 上方：倒计时 (e.g. In 5 Min) -->
+              <div class="time-large mb-1">
+                 {{ formatTime(dep.when || dep.plannedWhen) }}
+              </div>
+
+              <!-- 下方：绝对时间 + 呼吸灯 (右下角) -->
+              <div class="d-flex align-items-center">
+                <span class="time-sub">{{ formatAbsTime(dep.when || dep.plannedWhen) }}</span>
+                <!-- 延时状态呼吸灯 -->
+                <div class="status-dot" :class="getDelayClass(dep.delay)"></div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 右侧 Map -->
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <script>
+    const { createApp, ref, onMounted, onUnmounted, computed } = Vue;
+
+    createApp({
+      setup() {
+        const currentTime = ref("");
+        const now = ref(new Date());
+        const searchQuery = ref("");
+        const searchResults = ref([]);
+        const starredStations = ref([]); 
+        const currentStation = ref(null);
+        const departuresRaw = ref([]);
+        const loading = ref(false);
+
+        let map = null;
+        let stationMarker = null;
+        let clockTimer = null;
+        let fetchTimer = null;
+        let searchTimeout = null;
+
+        const API_BASE = "https://v6.vbb.transport.rest";
+
+        const updateClock = () => {
+          const d = new Date();
+          now.value = d;
+          currentTime.value = d.toLocaleTimeString("de-DE", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+        };
+
+        onMounted(() => {
+          map = L.map("map").setView([52.5200, 13.4050], 13);
+          
+          L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CARTO',
+            subdomains: "abcd",
+            maxZoom: 20,
+          }).addTo(map);
+
+          clockTimer = setInterval(updateClock, 1000);
+          updateClock();
+
+          fetchTimer = setInterval(() => {
+            if (currentStation.value) {
+              fetchDepartures(currentStation.value.id, true);
+            }
+          }, 30000);
+        });
+
+        onUnmounted(() => {
+          if (clockTimer) clearInterval(clockTimer);
+          if (fetchTimer) clearInterval(fetchTimer);
+        });
+
+        // --- Logic ---
+
+        const isStarred = (station) => {
+          return starredStations.value.some(s => s.id === station.id);
+        };
+
+        const toggleStar = (station) => {
+          const idx = starredStations.value.findIndex(s => s.id === station.id);
+          if (idx === -1) {
+            starredStations.value.push(station);
+          } else {
+            starredStations.value.splice(idx, 1);
+          }
+        };
+
+        const onSearchInput = () => {
+          if (!searchQuery.value.trim()) {
+            searchResults.value = [];
+            return;
+          }
+          if (searchTimeout) clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(searchStations, 300);
+        };
+
+        const clearSearch = () => {
+          searchQuery.value = "";
+          searchResults.value = [];
+        };
+
+        const searchStations = async () => {
+          const q = searchQuery.value.trim();
+          if (!q) {
+            searchResults.value = [];
+            return;
+          }
+          
+          // 1. 本地搜索收藏
+          const lowerQ = q.toLowerCase();
+          const localMatches = starredStations.value.filter(s => 
+            s.name.toLowerCase().includes(lowerQ)
+          );
+
+          try {
+            // 2. API 网络搜索
+            const response = await axios.get(
+              `${API_BASE}/locations?query=${encodeURIComponent(q)}&results=8&stops=true&addresses=false&poi=false`
+            );
+            const apiResults = response.data.filter((item) => item.type === "stop");
+            
+            // 3. 合并去重
+            const localIds = new Set(localMatches.map(s => s.id));
+            const uniqueApiResults = apiResults.filter(s => !localIds.has(s.id));
+            searchResults.value = [...localMatches, ...uniqueApiResults];
+          } catch (e) {
+            console.error("Search error", e);
+            searchResults.value = localMatches;
+          }
+        };
+
+        const selectStation = (station) => {
+          currentStation.value = station;
+          searchResults.value = []; 
+          searchQuery.value = station.name; 
+          
+          if (station.location) {
+            const { latitude, longitude } = station.location;
+            map.setView([latitude, longitude], 16);
+            if (stationMarker) map.removeLayer(stationMarker);
+            stationMarker = L.marker([latitude, longitude])
+              .addTo(map)
+              .bindPopup(`<b>${station.name}</b>`)
+              .openPopup();
+          }
+          fetchDepartures(station.id);
+        };
+
+        const fetchDepartures = async (stationId, silent = false) => {
+          if (!silent) loading.value = true;
+          try {
+            const response = await axios.get(
+              `${API_BASE}/stops/${stationId}/departures?duration=60&results=30&remarks=true`
+            );
+            if (response.data.departures) {
+              departuresRaw.value = response.data.departures;
+            } else {
+              departuresRaw.value = [];
+            }
+          } catch (e) {
+            console.error(e);
+            if (!silent) departuresRaw.value = [];
+          } finally {
+            loading.value = false;
+          }
+        };
+
+        const departures = computed(() => {
+          if (!departuresRaw.value) return [];
+          return departuresRaw.value.filter((dep) => {
+            const date = new Date(dep.when || dep.plannedWhen);
+            const diffMs = date - now.value;
+            // 隐藏条件：超过1分钟前出发的车
+            if (diffMs < -60000) return false;
+            return true;
+          });
+        });
+
+        const isDeparted = (dep) => {
+          const date = new Date(dep.when || dep.plannedWhen);
+          const diffMs = date - now.value;
+          return diffMs <= -30000; // -30秒
+        };
+
+        const getProductClass = (product) => `product-${product}`;
+
+        const getDelayClass = (delay) => {
+          if (delay === null || delay <= 60) return "status-green"; 
+          if (delay < 300) return "status-orange"; 
+          return "status-red";
+        };
+
+        // 获取特别信息文本 (先留空)
+        const getRemarkText = (dep) => {
+            return ""; 
+        };
+
+        const formatTime = (isoString) => {
+          if (!isoString) return "";
+          const date = new Date(isoString);
+          const diffMs = date - now.value;
+          const diffSeconds = diffMs / 1000;
+
+          if (diffSeconds < -30) return "";
+          if (diffSeconds >= -30 && diffSeconds < 60) {
+            return "Sofort";
+          }
+          
+          const diffMins = Math.floor(diffMs / 60000);
+          return `In ${diffMins} Min`;
+        };
+
+        const formatAbsTime = (isoString) => {
+          if (!isoString) return "";
+          return new Date(isoString).toLocaleTimeString("de-DE", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        };
+        
+        const focusMap = (dep) => {
+           // optional
+        };
+
+        return {
+          currentTime,
+          searchQuery,
+          searchResults,
+          currentStation,
+          departures,
+          loading,
+          onSearchInput,
+          selectStation,
+          clearSearch,
+          isStarred,
+          toggleStar,
+          getProductClass,
+          getDelayClass,
+          formatTime,
+          formatAbsTime,
+          isDeparted,
+          getRemarkText,
+          focusMap
+        };
+      },
+    }).mount("#app");
+  </script>
+</body>
+</html>
