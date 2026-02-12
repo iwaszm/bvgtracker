@@ -61,6 +61,43 @@
       z-index: 1;
     }
 
+    /* 右上角浮岛菜单 */
+    .top-right-menu {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 2000;
+      display: flex;
+      gap: 4px;
+      background-color: rgba(30, 30, 30, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 6px 8px;
+      border-radius: 50px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .menu-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background-color: transparent;
+      color: #ccc;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-size: 1.1rem;
+    }
+
+    .menu-btn:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: var(--bvg-yellow);
+      transform: scale(1.05);
+    }
+
     /* 1. 时间显示区域 */
     .section-time {
       padding: 15px;
@@ -88,6 +125,8 @@
     .search-input-wrapper {
       position: relative;
       margin-bottom: 10px;
+      display: flex;
+      align-items: center;
     }
 
     .form-control-dark {
@@ -95,6 +134,7 @@
       border: 1px solid #555;
       color: #fff;
       padding: 10px 15px;
+      padding-right: 80px;
       border-radius: 6px;
       width: 100%;
     }
@@ -106,20 +146,24 @@
       box-shadow: 0 0 0 0.2rem rgba(240, 228, 0, 0.25);
     }
 
-    .clear-btn {
+    .input-action-btn {
       position: absolute;
-      right: 10px;
       top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
       color: #888;
       cursor: pointer;
+      padding: 5px;
+      transition: color 0.2s;
     }
     
-    .clear-btn:hover { color: #fff; }
+    .input-action-btn:hover { color: #fff; }
 
-    /* 过滤器工具栏 (Flex布局) */
+    .clear-btn { right: 45px; }
+    .location-btn { right: 10px; }
+    .location-btn:hover { color: var(--bvg-yellow); }
+
     .filter-toolbar {
       display: flex;
       justify-content: space-between;
@@ -132,7 +176,6 @@
       gap: 5px;
     }
 
-    /* 方形色块按钮样式 */
     .type-btn {
       width: 38px;
       height: 38px;
@@ -145,9 +188,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      opacity: 0.3; /* 未选中状态变暗 */
+      opacity: 0.3;
       transition: all 0.2s ease;
-      background-color: #444; /* 默认灰色背景 */
+      background-color: #444;
     }
 
     .type-btn:hover {
@@ -155,26 +198,18 @@
       opacity: 0.7;
     }
 
-    /* 选中激活状态 */
     .type-btn.active {
       opacity: 1;
       transform: scale(1.0);
       box-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
 
-    /* 激活时的具体颜色 */
     .type-btn.active.btn-s { background-color: #008D4F; }
     .type-btn.active.btn-u { background-color: #0063A5; }
     .type-btn.active.btn-tram { background-color: #CC0000; }
     .type-btn.active.btn-bus { background-color: #A5027D; }
-    
-    /* Zug 改为银白色，文字改为黑色以保证对比度 */
-    .type-btn.active.btn-zug { 
-      background-color: #E0E0E0; 
-      color: #000000;
-    }
+    .type-btn.active.btn-zug { background-color: #E0E0E0; color: #000000; }
 
-    /* 时长下拉菜单 */
     .duration-select {
       background-color: #1a1a1a;
       border: 1px solid #555;
@@ -184,14 +219,9 @@
       font-size: 0.85rem;
       cursor: pointer;
       outline: none;
-      height: 38px; /* 与按钮高度一致 */
+      height: 38px;
     }
 
-    .duration-select:focus {
-      border-color: var(--bvg-yellow);
-    }
-
-    /* 搜索结果下拉 */
     .search-dropdown {
       position: absolute;
       top: 100%;
@@ -217,43 +247,49 @@
     }
 
     .search-item:hover { background-color: #444; }
-    .search-item:last-child { border-bottom: none; }
-    
-    .star-icon { cursor: pointer; color: #666; transition: color 0.2s; }
-    .star-icon:hover { color: var(--bvg-yellow); }
-    .star-icon.starred { color: var(--bvg-yellow); }
 
-    /* 3. 信息列表区域 (Info) */
+    /* 3. 信息列表区域 */
     .section-info {
       flex-grow: 1;
       overflow-y: auto;
       padding: 10px;
     }
 
-    .section-info::-webkit-scrollbar {
-      width: 6px;
-    }
-    .section-info::-webkit-scrollbar-track {
-      background: #222;
-    }
-    .section-info::-webkit-scrollbar-thumb {
-      background: #555;
-      border-radius: 3px;
-    }
-
-    /* 巴士卡片样式 */
     .bus-card {
       background-color: var(--bvg-card-bg);
       margin-bottom: 10px;
       border-radius: 6px;
-      padding: 12px;
+      padding: 0;
       transition: all 0.2s ease;
       border-left: 4px solid #666;
+      overflow: hidden;
     }
 
     .bus-card:hover {
       background-color: #444;
-      transform: translateX(4px);
+    }
+
+    .card-header {
+      padding: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center; /* 垂直对齐 */
+    }
+
+    /* 文本截断关键：flex:1 + min-width:0 */
+    .card-info-left {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      margin-right: 10px;
+    }
+
+    .card-time-right {
+      flex-shrink: 0;
+      text-align: right;
+      min-width: 85px; /* 固定宽度保证对齐 */
     }
 
     .bus-card.departed {
@@ -261,65 +297,31 @@
       filter: grayscale(1);
     }
 
+    /* 交通工具色彩 */
     .product-bus { border-left-color: #A5027D; }
     .product-tram { border-left-color: #CC0000; }
     .product-subway { border-left-color: #006747; }
     .product-suburban { border-left-color: #008D4F; }
     .product-regional { border-left-color: var(--db-red); }
-    .product-express { border-left-color: #ffffff; }
 
-    /* 呼吸灯效果 Keyframes */
-    @keyframes breathe {
-      0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
-      70% { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-    }
-    
+    /* 呼吸灯效果 */
     @keyframes breathe-green {
       0% { box-shadow: 0 0 0 0 rgba(77, 255, 77, 0.6); }
       70% { box-shadow: 0 0 0 5px rgba(77, 255, 77, 0); }
       100% { box-shadow: 0 0 0 0 rgba(77, 255, 77, 0); }
     }
-    
-    @keyframes breathe-orange {
-      0% { box-shadow: 0 0 0 0 rgba(255, 170, 0, 0.6); }
-      70% { box-shadow: 0 0 0 5px rgba(255, 170, 0, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 170, 0, 0); }
-    }
-    
-    @keyframes breathe-red {
-      0% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.6); }
-      70% { box-shadow: 0 0 0 5px rgba(255, 51, 51, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0); }
-    }
-
     .status-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
       margin-left: 8px;
       flex-shrink: 0;
-      transform: translateY(1px); 
+      display: inline-block;
     }
-    
-    .status-green { 
-      background-color: #4dff4d; 
-      animation: breathe-green 2s infinite; 
-    }
-    .status-orange { 
-      background-color: #ffaa00; 
-      animation: breathe-orange 2s infinite; 
-    }
-    .status-red { 
-      background-color: #ff3333; 
-      animation: breathe-red 2s infinite; 
-    }
-    /* 静态无信号状态 */
-    .status-static {
-      background-color: #888; /* 灰色 */
-      box-shadow: none;
-      animation: none;
-    }
+    .status-green { background-color: #4dff4d; animation: breathe-green 2s infinite; }
+    .status-orange { background-color: #ffaa00; }
+    .status-red { background-color: #ff3333; }
+    .status-static { background-color: #888; }
 
     .line-badge {
       background-color: #fff;
@@ -346,24 +348,13 @@
       color: #eee;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .remarks-text {
-      font-size: 0.75rem;
-      color: #aaa;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: 2px;
-      min-height: 1.2em;
+      text-overflow: ellipsis; /* 长名称自动省略号 */
     }
 
     .time-large {
       font-size: 1.1rem;
       font-weight: bold;
       color: #fff;
-      white-space: nowrap;
     }
 
     .time-sub {
@@ -372,10 +363,37 @@
       text-align: right;
     }
 
+    /* 经停站样式 */
+    .stopover-container {
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 10px 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .stopover-item {
+      display: flex;
+      align-items: center;
+      padding: 4px 0;
+      min-width: 0;
+    }
+    .stopover-time { width: 45px; font-size: 0.8rem; color: #aaa; flex-shrink: 0; }
+    .stopover-node { width: 8px; height: 8px; border-radius: 50%; background-color: #555; margin: 0 10px; flex-shrink: 0; }
+    .stopover-name {
+      font-size: 0.85rem;
+      color: #ddd;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis; /* 列表内长名称也支持省略号 */
+    }
+
+    .weiter-btn { width: 100%; background: none; border: 1px dashed #555; color: #888; font-size: 0.75rem; padding: 4px; margin-top: 8px; border-radius: 4px; }
+    .weiter-btn:hover { background-color: rgba(255, 255, 255, 0.05); color: #fff; }
+
     @media (max-width: 768px) {
       #app { flex-direction: column; }
-      .sidebar { width: 100%; height: 60%; order: 2; border-right: none; border-top: 1px solid #444; }
-      .map-container { height: 40%; order: 1; }
+      .sidebar { width: 100%; height: 50%; }
+      .map-container { flex-grow: 1; }
     }
   </style>
 </head>
@@ -383,13 +401,10 @@
   <div id="app">
     <!-- 左侧 Sidebar -->
     <div class="sidebar">
-      
-      <!-- 1. 时间 -->
       <div class="section-time">
         <div class="clock-display">{{ currentTime }}</div>
       </div>
 
-      <!-- 2. 搜索与过滤 -->
       <div class="section-search">
         <div class="search-input-wrapper">
           <input
@@ -399,39 +414,32 @@
             v-model="searchQuery"
             @input="onSearchInput"
           />
-          <button v-if="searchQuery" @click="clearSearch" class="clear-btn">
+          <button v-if="searchQuery" @click="clearSearch" class="input-action-btn clear-btn">
             <i class="fas fa-times"></i>
+          </button>
+          <button @click="locateMe" class="input-action-btn location-btn">
+            <i class="fas fa-location-arrow"></i>
           </button>
         </div>
 
-        <!-- 过滤工具栏 -->
         <div class="filter-toolbar">
-          
-          <!-- 左侧：车型多选开关 -->
           <div class="filter-group">
-            <button class="type-btn btn-s" :class="{ active: isTypeActive('suburban') }" @click="toggleType('suburban')" title="S-Bahn">S</button>
-            <button class="type-btn btn-u" :class="{ active: isTypeActive('subway') }" @click="toggleType('subway')" title="U-Bahn">U</button>
-            <button class="type-btn btn-tram" :class="{ active: isTypeActive('tram') }" @click="toggleType('tram')" title="Tram">Tram</button>
-            <button class="type-btn btn-bus" :class="{ active: isTypeActive('bus') }" @click="toggleType('bus')" title="Bus">Bus</button>
-            <button class="type-btn btn-zug" :class="{ active: isTypeActive('regional') }" @click="toggleType('regional')" title="Zug">Zug</button>
+            <button class="type-btn btn-s" :class="{ active: isTypeActive('suburban') }" @click="toggleType('suburban')">S</button>
+            <button class="type-btn btn-u" :class="{ active: isTypeActive('subway') }" @click="toggleType('subway')">U</button>
+            <button class="type-btn btn-tram" :class="{ active: isTypeActive('tram') }" @click="toggleType('tram')">Tram</button>
+            <button class="type-btn btn-bus" :class="{ active: isTypeActive('bus') }" @click="toggleType('bus')">Bus</button>
+            <button class="type-btn btn-zug" :class="{ active: isTypeActive('regional') }" @click="toggleType('regional')">Zug</button>
           </div>
 
-          <!-- 右侧：时长下拉菜单 -->
-          <div class="duration-group">
-            <select v-model="duration" @change="onDurationChange" class="duration-select">
-              <option :value="5">5 Min</option>
-              <option :value="10">10 Min</option>
-              <option :value="20">20 Min</option>
-              <option :value="30">30 Min</option>
-              <option :value="60">60 Min</option>
-              <option :value="90">90 Min</option>
-              <option :value="120">120 Min</option>
-            </select>
-          </div>
-        
+          <select v-model="duration" @change="onDurationChange" class="duration-select">
+            <option :value="5">5 Min</option>
+            <option :value="15">15 Min</option>
+            <option :value="30">30 Min</option>
+            <option :value="60">60 Min</option>
+            <option :value="120">120 Min</option>
+          </select>
         </div>
 
-        <!-- 搜索结果列表 (浮动) -->
         <div class="search-dropdown" v-if="searchResults.length > 0">
           <div
             class="search-item"
@@ -439,90 +447,67 @@
             :key="station.id"
             @click="selectStation(station)"
           >
-            <div>
-              <i class="fas fa-map-marker-alt me-2 text-muted"></i>
-              {{ station.name }}
-            </div>
-            <i 
-              class="fa-star star-icon"
-              :class="isStarred(station) ? 'fas starred' : 'far'"
-              @click.stop="toggleStar(station)"
-            ></i>
+            <div><i class="fas fa-map-marker-alt me-2 text-muted"></i>{{ station.name }}</div>
           </div>
         </div>
       </div>
 
-      <!-- 3. 信息列表 (Info) -->
+      <!-- 信息列表 -->
       <div class="section-info">
-        
-        <!-- Loading -->
         <div v-if="loading" class="text-center py-4">
           <div class="spinner-border text-warning" role="status"></div>
           <div class="mt-2 small text-muted">Lade Abfahrten...</div>
         </div>
 
-        <!-- 空状态 -->
-        <div v-if="!loading && currentStation && departures.length === 0" class="alert alert-dark border-secondary text-center">
-          <small>Keine Abfahrten in den nächsten {{ duration }} Min.</small>
-        </div>
-
-        <!-- 引导信息 -->
-        <div v-if="!currentStation && !loading && searchResults.length === 0" class="text-center text-muted mt-5">
-          <i class="fas fa-arrow-up mb-2"></i><br>
-          Bitte suchen Sie nach einer Haltestelle.
-        </div>
-
-        <!-- 列表内容 -->
         <div
           class="bus-card"
           v-for="dep in departures"
           :key="dep.tripId"
           :class="[getProductClass(dep.line.product), { departed: isDeparted(dep) }]"
-          @click="focusMap(dep)"
         >
-          <div class="d-flex justify-content-between align-items-start">
-            
-            <!-- 左侧：线路 + 方向 (并排) + 下方留白/Remark -->
-            <div class="d-flex flex-column justify-content-center" style="max-width: 65%; overflow: hidden;">
-              <!-- 第一行：Badge + 终点站 -->
+          <div class="card-header" @click="toggleTrip(dep)">
+            <div class="card-info-left">
               <div class="d-flex align-items-center">
                 <span class="line-badge">{{ dep.line.name }}</span>
-                <div class="dest-text" :title="dep.direction">
-                  {{ dep.direction }}
-                </div>
-              </div>
-              <!-- 第二行：特别信息 -->
-              <div class="remarks-text" :title="getRemarkText(dep)">
-                 {{ getRemarkText(dep) }}
+                <div class="dest-text" :title="dep.direction">{{ dep.direction }}</div>
               </div>
             </div>
 
-            <!-- 右侧：倒计时(上) + 绝对时间&灯(下) -->
-            <div class="d-flex flex-column align-items-end">
-              
-              <!-- 上方：倒计时 (e.g. In 5 Min) -->
-              <div class="time-large mb-1">
-                 {{ formatTime(dep.when || dep.plannedWhen) }}
-              </div>
-
-              <!-- 下方：绝对时间 + 呼吸灯 (右下角) -->
-              <div class="d-flex align-items-center">
-                <span class="time-sub">{{ formatAbsTime(dep.when || dep.plannedWhen) }}</span>
-                <!-- 延时状态呼吸灯，传入整个 dep 对象以检查是否有实时数据 -->
+            <div class="card-time-right">
+              <div class="time-large">{{ formatTime(dep.when || dep.plannedWhen) }}</div>
+              <div class="time-sub">
+                {{ formatAbsTime(dep.when || dep.plannedWhen) }}
                 <div class="status-dot" :class="getDelayClass(dep)"></div>
               </div>
-
             </div>
+          </div>
 
+          <!-- 展开区域 -->
+          <div v-if="expandedTripId === dep.tripId" class="stopover-container">
+             <div v-if="isTripLoading" class="text-center py-2">
+                <div class="spinner-border spinner-border-sm text-secondary"></div>
+             </div>
+             <div v-else>
+                <div class="stopover-item" v-for="stop in visibleStopovers" :key="stop.stop.id">
+                   <div class="stopover-time">{{ formatAbsTime(stop.arrival || stop.plannedArrival || stop.departure) }}</div>
+                   <div class="stopover-node"></div>
+                   <div class="stopover-name">{{ stop.stop.name }}</div>
+                </div>
+                <button v-if="currentTripStopovers.length > stopoverLimit" class="weiter-btn" @click.stop="stopoverLimit += 5">Weiter...</button>
+             </div>
           </div>
         </div>
-
       </div>
     </div>
 
-    <!-- 右侧 Map -->
+    <!-- 右侧地图 -->
     <div class="map-container">
       <div id="map"></div>
+      <div class="top-right-menu">
+        <button class="menu-btn" title="Nachtmodus"><i class="fas fa-moon"></i></button>
+        <button class="menu-btn" title="Barrierefreiheit"><i class="fas fa-universal-access"></i></button>
+        <button class="menu-btn" title="Sprache"><i class="fas fa-globe"></i></button>
+      </div>
     </div>
   </div>
 
@@ -532,7 +517,7 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
   <script>
-    const { createApp, ref, onMounted, onUnmounted, computed } = Vue;
+    const { createApp, ref, onMounted, computed } = Vue;
 
     createApp({
       setup() {
@@ -540,289 +525,113 @@
         const now = ref(new Date());
         const searchQuery = ref("");
         const searchResults = ref([]);
-        const starredStations = ref([]); 
         const currentStation = ref(null);
         const departuresRaw = ref([]);
         const loading = ref(false);
-        
-        // 过滤器状态：支持多选，默认全部选中
         const activeFilters = ref(['suburban', 'subway', 'tram', 'bus', 'regional']);
-        // 时长：默认 60 分钟
         const duration = ref(60);
+        
+        const expandedTripId = ref(null);
+        const currentTripStopovers = ref([]);
+        const isTripLoading = ref(false);
+        const stopoverLimit = ref(5);
 
-        let map = null;
-        let stationMarker = null;
-        let clockTimer = null;
-        let fetchTimer = null;
-        let searchTimeout = null;
-
-        const API_BASE = "https://v6.vbb.transport.rest";
-
-        const updateClock = () => {
-          const d = new Date();
-          now.value = d;
-          currentTime.value = d.toLocaleTimeString("de-DE", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          });
-        };
+        let map, stationMarker;
+        const API_BASE = "https://v6.bvg.transport.rest";
 
         onMounted(() => {
           map = L.map("map").setView([52.5200, 13.4050], 13);
-          
-          L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CARTO',
-            subdomains: "abcd",
-            maxZoom: 20,
-          }).addTo(map);
-
-          clockTimer = setInterval(updateClock, 1000);
-          updateClock();
-
-          fetchTimer = setInterval(() => {
-            if (currentStation.value) {
-              fetchDepartures(currentStation.value.id, true);
-            }
-          }, 30000);
+          L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png").addTo(map);
+          setInterval(() => { now.value = new Date(); currentTime.value = now.value.toLocaleTimeString("de-DE"); }, 1000);
         });
 
-        onUnmounted(() => {
-          if (clockTimer) clearInterval(clockTimer);
-          if (fetchTimer) clearInterval(fetchTimer);
-        });
-
-        // --- Logic ---
-
-        const isTypeActive = (type) => activeFilters.value.includes(type);
-
-        const toggleType = (type) => {
-          if (activeFilters.value.includes(type)) {
-            // 如果只有最后一个了，是否允许取消？这里允许全部取消
-            activeFilters.value = activeFilters.value.filter(t => t !== type);
-          } else {
-            activeFilters.value.push(type);
-          }
-        };
-
-        const onDurationChange = () => {
-          // 改变时长后立即刷新数据
-          if (currentStation.value) {
-            fetchDepartures(currentStation.value.id);
-          }
-        };
-
-        const isStarred = (station) => {
-          return starredStations.value.some(s => s.id === station.id);
-        };
-
-        const toggleStar = (station) => {
-          const idx = starredStations.value.findIndex(s => s.id === station.id);
-          if (idx === -1) {
-            starredStations.value.push(station);
-          } else {
-            starredStations.value.splice(idx, 1);
-          }
-        };
-
-        const onSearchInput = () => {
-          if (!searchQuery.value.trim()) {
-            searchResults.value = [];
-            return;
-          }
-          if (searchTimeout) clearTimeout(searchTimeout);
-          searchTimeout = setTimeout(searchStations, 300);
-        };
-
-        const clearSearch = () => {
-          searchQuery.value = "";
-          searchResults.value = [];
-        };
-
-        const searchStations = async () => {
-          const q = searchQuery.value.trim();
-          if (!q) {
-            searchResults.value = [];
-            return;
-          }
-          
-          const lowerQ = q.toLowerCase();
-          const localMatches = starredStations.value.filter(s => 
-            s.name.toLowerCase().includes(lowerQ)
-          );
-
+        const toggleTrip = async (dep) => {
+          if (expandedTripId.value === dep.tripId) { expandedTripId.value = null; return; }
+          expandedTripId.value = dep.tripId;
+          stopoverLimit.value = 5;
+          isTripLoading.value = true;
           try {
-            const response = await axios.get(
-              `${API_BASE}/locations?query=${encodeURIComponent(q)}&results=8&stops=true&addresses=false&poi=false`
-            );
-            const apiResults = response.data.filter((item) => item.type === "stop");
-            
-            // 地理过滤：只保留距离柏林中心 (52.52, 13.405) < 30km 范围内的站点 (ABC区)
-            const berlinCenter = { lat: 52.52, lon: 13.405 };
-            const filteredApiResults = apiResults.filter(station => {
-               if(!station.location) return true; // 没坐标的保留？或者丢弃
-               const dLat = Math.abs(station.location.latitude - berlinCenter.lat);
-               const dLon = Math.abs(station.location.longitude - berlinCenter.lon);
-               return dLat < 0.3 && dLon < 0.5;
-            });
+            const res = await axios.get(`${API_BASE}/trips/${encodeURIComponent(dep.tripId)}`, { params: { stopovers: true } });
+            const allStops = res.data.trip.stopovers;
+            const idx = allStops.findIndex(s => s.stop.id === currentStation.value.id);
+            currentTripStopovers.value = idx !== -1 ? allStops.slice(idx + 1) : allStops;
+          } catch (e) { console.error(e); } finally { isTripLoading.value = false; }
+        };
 
-            const localIds = new Set(localMatches.map(s => s.id));
-            const uniqueApiResults = filteredApiResults.filter(s => !localIds.has(s.id));
-            searchResults.value = [...localMatches, ...uniqueApiResults];
-          } catch (e) {
-            console.error("Search error", e);
-            searchResults.value = localMatches;
-          }
+        const visibleStopovers = computed(() => currentTripStopovers.value.slice(0, stopoverLimit.value));
+
+        const locateMe = () => {
+          loading.value = true;
+          navigator.geolocation.getCurrentPosition(async (pos) => {
+            const { latitude, longitude } = pos.coords;
+            const res = await axios.get(`${API_BASE}/stops/nearby`, { params: { latitude, longitude, results: 8, distance: 2000 } });
+            searchResults.value = res.data;
+            if (res.data.length > 0) {
+              searchQuery.value = "Ihr Standort";
+              map.setView([latitude, longitude], 15);
+            }
+            loading.value = false;
+          }, () => { loading.value = false; alert("Geo-Zugriff verweigert."); });
+        };
+
+        const onSearchInput = async () => {
+          if (!searchQuery.value) return;
+          const res = await axios.get(`${API_BASE}/locations`, { params: { query: searchQuery.value, results: 6, stops: true } });
+          searchResults.value = res.data.filter(s => s.type === 'stop');
         };
 
         const selectStation = (station) => {
           currentStation.value = station;
-          searchResults.value = []; 
-          searchQuery.value = station.name; 
-          
+          searchResults.value = [];
+          searchQuery.value = station.name;
           if (station.location) {
-            const { latitude, longitude } = station.location;
-            map.setView([latitude, longitude], 16);
+            map.setView([station.location.latitude, station.location.longitude], 16);
             if (stationMarker) map.removeLayer(stationMarker);
-            stationMarker = L.marker([latitude, longitude])
-              .addTo(map)
-              .bindPopup(`<b>${station.name}</b>`)
-              .openPopup();
+            stationMarker = L.marker([station.location.latitude, station.location.longitude]).addTo(map);
           }
           fetchDepartures(station.id);
         };
 
-        const fetchDepartures = async (stationId, silent = false) => {
-          if (!silent) loading.value = true;
+        const fetchDepartures = async (id) => {
+          loading.value = true;
           try {
-            // 使用动态 duration
-            const resultsLimit = Math.max(30, duration.value * 2); // 估算结果数量，防止时长长但结果不够
-            const response = await axios.get(
-              `${API_BASE}/stops/${stationId}/departures?duration=${duration.value}&results=${resultsLimit}&remarks=true`
-            );
-            if (response.data.departures) {
-              departuresRaw.value = response.data.departures;
-            } else {
-              departuresRaw.value = [];
-            }
-          } catch (e) {
-            console.error(e);
-            if (!silent) departuresRaw.value = [];
-          } finally {
-            loading.value = false;
-          }
+            const res = await axios.get(`${API_BASE}/stops/${id}/departures`, { params: { duration: duration.value, results: 40 } });
+            departuresRaw.value = res.data.departures || [];
+          } catch (e) { departuresRaw.value = []; } finally { loading.value = false; }
         };
 
         const departures = computed(() => {
-          if (!departuresRaw.value) return [];
-          
-          let filtered = departuresRaw.value.filter((dep) => {
-            const date = new Date(dep.when || dep.plannedWhen);
-            const diffMs = date - now.value;
-            // 修改：超过30秒前出发的车立即隐藏
-            if (diffMs < -30000) return false;
-            return true;
-          });
-
-          // Multi-select Filtering Logic
-          filtered = filtered.filter(dep => {
-             const p = dep.line.product;
-             if (p === 'express' || p === 'regional') {
-                return activeFilters.value.includes('regional');
-             }
-             return activeFilters.value.includes(p);
-          });
-          
-          // Bugfix: 显式按时间排序 (防止数据乱序，解决 RE 13min 排在第一位的问题)
-          filtered.sort((a, b) => {
-             const timeA = new Date(a.when || a.plannedWhen);
-             const timeB = new Date(b.when || b.plannedWhen);
-             return timeA - timeB;
-          });
-
-          return filtered;
+          return departuresRaw.value
+            .filter(d => {
+              const p = d.line.product;
+              return (p === 'regional' || p === 'express') ? activeFilters.value.includes('regional') : activeFilters.value.includes(p);
+            })
+            .filter(d => (new Date(d.when || d.plannedWhen) - now.value) >= -30000)
+            .sort((a, b) => new Date(a.when || a.plannedWhen) - new Date(b.when || b.plannedWhen));
         });
 
-        const isDeparted = (dep) => {
-          const date = new Date(dep.when || dep.plannedWhen);
-          const diffMs = date - now.value;
-          // 修改：到达时间后立即变灰 (<= 0)
-          return diffMs <= 0; 
+        const isDeparted = (dep) => (new Date(dep.when || dep.plannedWhen) - now.value) <= 0;
+        const getDelayClass = (d) => d.delay === null ? "status-static" : "status-green";
+        const formatTime = (iso) => {
+          const diff = (new Date(iso) - now.value) / 60000;
+          if (diff <= 0) return "";
+          return diff < 1 ? "Sofort" : `In ${Math.round(diff)} Min`;
         };
-
-        const getProductClass = (product) => `product-${product}`;
-
-        const getDelayClass = (dep) => {
-          // 修改：检查是否无实时信号 (delay 为 null 且没有 when 字段通常意味着没有实时信号)
-          // VBB API 逻辑: delay === null 通常表示没有实时数据
-          if (dep.delay === null) return "status-static";
-
-          const delay = dep.delay || 0;
-          if (delay <= 60) return "status-green"; 
-          if (delay < 300) return "status-orange"; 
-          return "status-red";
-        };
-
-        const getRemarkText = (dep) => {
-            return ""; 
-        };
-
-        const formatTime = (isoString) => {
-          if (!isoString) return "";
-          const date = new Date(isoString);
-          const diffMs = date - now.value;
-          const diffSeconds = diffMs / 1000;
-          
-          // 修改：变灰 (<= 0s) 后不显示 Sofort (返回空字符串)
-          if (diffSeconds <= 0) return ""; 
-
-          // 0 到 60秒显示 Sofort
-          if (diffSeconds > 0 && diffSeconds < 60) {
-            return "Sofort";
-          }
-          
-          const diffMins = Math.floor(diffMs / 60000);
-          return `In ${diffMins} Min`;
-        };
-
-        const formatAbsTime = (isoString) => {
-          if (!isoString) return "";
-          return new Date(isoString).toLocaleTimeString("de-DE", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-        };
-        
-        const focusMap = (dep) => {
-           // optional
+        const formatAbsTime = (iso) => iso ? new Date(iso).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
+        const isTypeActive = (t) => activeFilters.value.includes(t);
+        const toggleType = (t) => {
+          if (activeFilters.value.includes(t)) activeFilters.value = activeFilters.value.filter(x => x !== t);
+          else activeFilters.value.push(t);
         };
 
         return {
-          currentTime,
-          searchQuery,
-          searchResults,
-          currentStation,
-          departures,
-          loading,
-          activeFilters, // Export active filters
-          duration,      // Export duration
-          isTypeActive,
-          toggleType,
-          onDurationChange,
-          onSearchInput,
-          selectStation,
-          clearSearch,
-          isStarred,
-          toggleStar,
-          getProductClass,
-          getDelayClass,
-          formatTime,
-          formatAbsTime,
-          isDeparted,
-          getRemarkText,
-          focusMap
+          currentTime, searchQuery, searchResults, departures, loading, duration,
+          isTypeActive, toggleType, selectStation, onSearchInput, clearSearch: () => { searchQuery.value = ""; searchResults.value = []; },
+          locateMe, formatTime, formatAbsTime, getDelayClass, isDeparted, getProductClass: (p) => `product-${p}`,
+          onDurationChange: () => fetchDepartures(currentStation.value.id), expandedTripId, toggleTrip, isTripLoading,
+          currentTripStopovers, visibleStopovers, stopoverLimit
         };
-      },
+      }
     }).mount("#app");
   </script>
 </body>
