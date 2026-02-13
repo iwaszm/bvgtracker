@@ -248,6 +248,32 @@
 
     .search-item:hover { background-color: #444; }
 
+    /* 标星按钮样式 */
+    .star-btn {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 1.1rem;
+      padding: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .star-btn:hover {
+      transform: scale(1.2);
+    }
+    .star-btn.starred {
+      color: var(--bvg-yellow);
+    }
+    
+    .fav-header {
+      padding: 8px 15px;
+      font-size: 0.75rem;
+      color: #888;
+      background-color: #2a2a2a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
     /* 3. 信息列表区域 */
     .section-info {
       flex-grow: 1;
@@ -267,6 +293,37 @@
 
     .bus-card:hover {
       background-color: #444;
+    }
+
+    /* 班次取消样式 */
+    .bus-card.cancelled {
+      opacity: 0.65;
+    }
+    
+    /* 仅对目的地和线路徽章使用删除线 */
+    .bus-card.cancelled .dest-text,
+    .bus-card.cancelled .line-badge {
+      text-decoration: line-through;
+      color: #aaa;
+    }
+
+    /* 时间区域特殊处理：红色警示字，无删除线 */
+    .cancel-text {
+      color: #ff5555;
+      font-weight: bold;
+      font-size: 0.95rem; /* 稍微缩小以防溢出 */
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* 如果取消，左边框也变灰，或者保留颜色但变暗 */
+    .bus-card.cancelled {
+      border-left-color: #555 !important;
+    }
+    
+    .bus-card.cancelled .line-badge {
+      background-color: #555 !important;
+      color: #bbb !important;
     }
 
     .card-header {
@@ -322,6 +379,9 @@
     .status-orange { background-color: #ffaa00; }
     .status-red { background-color: #ff3333; }
     .status-static { background-color: #888; }
+    
+    /* 灰色状态灯 */
+    .status-cancel { background-color: #777; border: 1px solid #555; } 
 
     .line-badge {
       background-color: #fff;
@@ -413,6 +473,7 @@
             placeholder="Haltestelle suchen..."
             v-model="searchQuery"
             @input="onSearchInput"
+            @focus="showFavorites"
           />
           <button v-if="searchQuery" @click="clearSearch" class="input-action-btn clear-btn">
             <i class="fas fa-times"></i>
@@ -440,14 +501,26 @@
           </select>
         </div>
 
-        <div class="search-dropdown" v-if="searchResults.length > 0">
+        <div class="search-dropdown" v-if="displayResults.length > 0">
+          <div v-if="isShowingFavorites" class="fav-header">
+            <i class="fas fa-star me-2"></i>Favoriten
+          </div>
           <div
             class="search-item"
-            v-for="station in searchResults"
+            v-for="station in displayResults"
             :key="station.id"
             @click="selectStation(station)"
           >
             <div><i class="fas fa-map-marker-alt me-2 text-muted"></i>{{ station.name }}</div>
+            <!-- 标星按钮 -->
+            <button 
+              class="star-btn" 
+              :class="{ 'starred': isStarred(station.id) }" 
+              @click.stop="toggleStar(station)"
+              title="Als Favorit speichern"
+            >
+              <i class="fas" :class="isStarred(station.id) ? 'fa-star' : 'fa-star'"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -463,7 +536,11 @@
           class="bus-card"
           v-for="dep in departures"
           :key="dep.tripId"
-          :class="[getProductClass(dep.line.product), { departed: isDeparted(dep) }]"
+          :class="[
+            getProductClass(dep.line.product), 
+            { 'departed': isDeparted(dep) && !dep.cancelled },
+            { 'cancelled': dep.cancelled } 
+          ]"
         >
           <div class="card-header" @click="toggleTrip(dep)">
             <div class="card-info-left">
@@ -474,17 +551,27 @@
             </div>
 
             <div class="card-time-right">
-              <div class="time-large">{{ formatTime(dep.when || dep.plannedWhen) }}</div>
+              <!-- 上方大字：正常显示倒计时，取消显示 ENTFÄLLT -->
+              <div class="time-large" :class="{ 'cancel-text': dep.cancelled }">
+                {{ dep.cancelled ? 'ENTFÄLLT' : formatTime(dep.when || dep.plannedWhen) }}
+              </div>
+              
+              <!-- 下方小字：绝对时间 + 状态灯 (取消时状态灯为灰色) -->
               <div class="time-sub">
-                {{ formatAbsTime(dep.when || dep.plannedWhen) }}
+                <span :class="{ 'text-muted': dep.cancelled }">
+                    {{ formatAbsTime(dep.when || dep.plannedWhen) }}
+                </span>
                 <div class="status-dot" :class="getDelayClass(dep)"></div>
               </div>
             </div>
           </div>
 
-          <!-- 展开区域 -->
+          <!-- 展开区域 (如果取消则不显示或显示已取消) -->
           <div v-if="expandedTripId === dep.tripId" class="stopover-container">
-             <div v-if="isTripLoading" class="text-center py-2">
+             <div v-if="dep.cancelled" class="text-center text-danger py-2">
+                 <i class="fas fa-ban me-2"></i>Diese Fahrt fällt leider aus.
+             </div>
+             <div v-else-if="isTripLoading" class="text-center py-2">
                 <div class="spinner-border spinner-border-sm text-secondary"></div>
              </div>
              <div v-else>
@@ -517,7 +604,7 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
   <script>
-    const { createApp, ref, onMounted, computed } = Vue;
+    const { createApp, ref, onMounted, computed, watch } = Vue;
 
     createApp({
       setup() {
@@ -525,6 +612,9 @@
         const now = ref(new Date());
         const searchQuery = ref("");
         const searchResults = ref([]);
+        const starredStations = ref([]); // 收藏列表
+        const isShowingFavorites = ref(false); // 状态：是否正在展示收藏夹
+        
         const currentStation = ref(null);
         const departuresRaw = ref([]);
         const loading = ref(false);
@@ -540,21 +630,90 @@
         const API_BASE = "https://v6.bvg.transport.rest";
 
         onMounted(() => {
+          // 初始化地图
           map = L.map("map").setView([52.5200, 13.4050], 13);
           L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png").addTo(map);
+          
+          // 时钟
           setInterval(() => { now.value = new Date(); currentTime.value = now.value.toLocaleTimeString("de-DE"); }, 1000);
+
+          // 加载本地收藏
+          const saved = localStorage.getItem('bvg_fav_stations');
+          if (saved) {
+            starredStations.value = JSON.parse(saved);
+          }
+        });
+
+        // 收藏逻辑
+        const isStarred = (id) => starredStations.value.some(s => s.id === id);
+        
+        const toggleStar = (station) => {
+          if (isStarred(station.id)) {
+            starredStations.value = starredStations.value.filter(s => s.id !== station.id);
+          } else {
+            // 保存必要信息
+            starredStations.value.push({
+              id: station.id,
+              name: station.name,
+              location: station.location, // 确保有位置信息以便点击时移动地图
+              type: station.type
+            });
+          }
+          localStorage.setItem('bvg_fav_stations', JSON.stringify(starredStations.value));
+        };
+
+        const showFavorites = () => {
+          if (!searchQuery.value && starredStations.value.length > 0) {
+            isShowingFavorites.value = true;
+            searchResults.value = []; // 清空之前的搜索结果，确保显示逻辑由 displayResults 控制
+          }
+        };
+
+        // 计算属性：决定下拉框显示什么
+        const displayResults = computed(() => {
+          if (searchQuery.value && searchResults.value.length > 0) {
+            return searchResults.value; // 搜索时显示搜索结果
+          } else if (!searchQuery.value && starredStations.value.length > 0) {
+            return starredStations.value; // 未输入时显示收藏
+          }
+          return [];
+        });
+
+        // 监听 searchQuery 变化，如果清空了，自动切回收藏夹
+        watch(searchQuery, (newVal) => {
+          if (!newVal) {
+            isShowingFavorites.value = true;
+          } else {
+            isShowingFavorites.value = false;
+          }
         });
 
         const toggleTrip = async (dep) => {
           if (expandedTripId.value === dep.tripId) { expandedTripId.value = null; return; }
           expandedTripId.value = dep.tripId;
+          
+          // 如果已取消，不需要请求详情
+          if (dep.cancelled) return;
+
           stopoverLimit.value = 5;
           isTripLoading.value = true;
           try {
             const res = await axios.get(`${API_BASE}/trips/${encodeURIComponent(dep.tripId)}`, { params: { stopovers: true } });
             const allStops = res.data.trip.stopovers;
-            const idx = allStops.findIndex(s => s.stop.id === currentStation.value.id);
-            currentTripStopovers.value = idx !== -1 ? allStops.slice(idx + 1) : allStops;
+            
+            // 修复逻辑：使用时间比对而不是索引切片
+            // 基准时间：当前站点出发时间
+            const departureTime = new Date(dep.when || dep.plannedWhen);
+
+            currentTripStopovers.value = allStops.filter(stop => {
+               // 获取站点的时间（优先使用到达时间，如果是始发站可能只有出发时间）
+               const sTime = stop.arrival || stop.plannedArrival || stop.departure || stop.plannedDeparture;
+               if (!sTime) return false;
+               
+               // 只保留时间晚于当前出发时间的站点
+               return new Date(sTime) > departureTime;
+            });
+            
           } catch (e) { console.error(e); } finally { isTripLoading.value = false; }
         };
 
@@ -575,14 +734,20 @@
         };
 
         const onSearchInput = async () => {
-          if (!searchQuery.value) return;
+          if (!searchQuery.value) {
+            searchResults.value = [];
+            isShowingFavorites.value = true;
+            return;
+          }
           const res = await axios.get(`${API_BASE}/locations`, { params: { query: searchQuery.value, results: 6, stops: true } });
           searchResults.value = res.data.filter(s => s.type === 'stop');
         };
 
         const selectStation = (station) => {
           currentStation.value = station;
-          searchResults.value = [];
+          searchResults.value = []; // 清空搜索结果
+          // 注意：如果想让用户选中后还能看到列表，可注释掉上面这行，但通常选中即关闭
+          
           searchQuery.value = station.name;
           if (station.location) {
             map.setView([station.location.latitude, station.location.longitude], 16);
@@ -606,12 +771,20 @@
               const p = d.line.product;
               return (p === 'regional' || p === 'express') ? activeFilters.value.includes('regional') : activeFilters.value.includes(p);
             })
-            .filter(d => (new Date(d.when || d.plannedWhen) - now.value) >= -30000)
+            // 注意：取消的班次可能没有 'when' 字段，只有 'plannedWhen'。我们需要保留它们以便显示取消状态。
+            // 如果 cancelled 为 true，我们通常认为它仍然是“未来”的某个时刻被取消的，或者根据 plannedWhen 判断
+            .filter(d => {
+               const time = d.when || d.plannedWhen;
+               return (new Date(time) - now.value) >= -30000;
+            })
             .sort((a, b) => new Date(a.when || a.plannedWhen) - new Date(b.when || b.plannedWhen));
         });
 
         const isDeparted = (dep) => (new Date(dep.when || dep.plannedWhen) - now.value) <= 0;
-        const getDelayClass = (d) => d.delay === null ? "status-static" : "status-green";
+        const getDelayClass = (d) => {
+            if (d.cancelled) return "status-cancel";
+            return d.delay === null ? "status-static" : "status-green";
+        };
         const formatTime = (iso) => {
           const diff = (new Date(iso) - now.value) / 60000;
           if (diff <= 0) return "";
@@ -623,13 +796,22 @@
           if (activeFilters.value.includes(t)) activeFilters.value = activeFilters.value.filter(x => x !== t);
           else activeFilters.value.push(t);
         };
+        
+        // 修改清除搜索逻辑
+        const clearSearch = () => {
+          searchQuery.value = "";
+          searchResults.value = [];
+          isShowingFavorites.value = true; // 清除时回到收藏夹视图
+        };
 
         return {
           currentTime, searchQuery, searchResults, departures, loading, duration,
-          isTypeActive, toggleType, selectStation, onSearchInput, clearSearch: () => { searchQuery.value = ""; searchResults.value = []; },
+          isTypeActive, toggleType, selectStation, onSearchInput, clearSearch,
           locateMe, formatTime, formatAbsTime, getDelayClass, isDeparted, getProductClass: (p) => `product-${p}`,
           onDurationChange: () => fetchDepartures(currentStation.value.id), expandedTripId, toggleTrip, isTripLoading,
-          currentTripStopovers, visibleStopovers, stopoverLimit
+          currentTripStopovers, visibleStopovers, stopoverLimit,
+          // 新增返回
+          starredStations, isStarred, toggleStar, displayResults, isShowingFavorites, showFavorites
         };
       }
     }).mount("#app");
