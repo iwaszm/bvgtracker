@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Abfahrtsmonitor Berlin (Final Layout)</title>
+  <title>Abfahrtsmonitor Berlin (3-State Layout)</title>
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <!-- Font Awesome -->
@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
-      /* 核心品牌色 - 保持不变 */
+      /* 核心品牌色 */
       --bvg-yellow: #F0E400;
       --db-red: #EC0016;
       --ubahn-blue: #0063A5; 
@@ -25,6 +25,7 @@
       --bg-input: #1a1a1a;
       --bg-dropdown: #333333;
       --bg-tooltip: rgba(30, 30, 30, 0.95);
+      --bg-toggle: #202020;
       
       --text-main: #ffffff;
       --text-muted: #aaaaaa;
@@ -41,7 +42,7 @@
       --shadow-soft: 0 4px 12px rgba(0,0,0,0.5);
     }
 
-    /* 光明模式变量覆盖 - 作用于 body.light-mode */
+    /* 光明模式变量覆盖 */
     body.light-mode {
       --bg-body: #e0e0e0;
       --bg-sidebar: #ffffff;
@@ -49,8 +50,8 @@
       --bg-card: #ffffff;
       --bg-input: #f1f3f5;
       --bg-dropdown: #ffffff;
-      /* Tooltip 保持深色以保证在地图上的高对比度 */
       --bg-tooltip: rgba(30, 30, 30, 0.95);
+      --bg-toggle: #eaeaea;
       
       --text-main: #212529;
       --text-muted: #6c757d;
@@ -94,7 +95,7 @@
       flex-direction: column;
       border-right: 1px solid var(--border-color);
       z-index: 1000;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s ease, height 0.3s ease;
     }
 
     /* 右侧地图 */
@@ -119,7 +120,7 @@
       transition: none !important;
     }
 
-    /* 地图上的 Tooltip 自定义样式 - 站点 */
+    /* 地图 Tooltip & Popup */
     .station-tooltip {
       background-color: rgba(30, 30, 30, 0.95);
       border: 1px solid var(--bvg-yellow);
@@ -129,13 +130,28 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.4);
       font-size: 0.9rem;
       padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px; /* 站名和RSS图标的间距 */
     }
-    .leaflet-tooltip-top:before {
-      border-top-color: rgba(30, 30, 30, 0.95);
-    }
+    .leaflet-tooltip-top:before { border-top-color: rgba(30, 30, 30, 0.95); }
     
+    /* 站名旁边的 RSS 图标样式 */
+    .map-radar-icon {
+        font-size: 0.85rem;
+        transition: color 0.3s ease;
+    }
+    .map-radar-icon.active {
+        color: var(--bvg-yellow);
+        animation: pulse 2s infinite;
+    }
+    .map-radar-icon.error {
+        color: #ff4444; /* 红色表示无信号 */
+    }
+    .map-radar-icon.inactive {
+        color: #666;
+    }
 
-    /* --- 车辆 Popup 自定义样式 --- */
     .vehicle-popup .leaflet-popup-content-wrapper {
       background-color: rgba(30, 30, 30, 0.95); 
       border: 1px solid var(--bvg-yellow);
@@ -161,12 +177,9 @@
       border-left: none;
       box-shadow: none;
     }
+    .vehicle-popup a.leaflet-popup-close-button { display: none; }
 
-    .vehicle-popup a.leaflet-popup-close-button {
-      display: none; 
-    }
-
-    /* 站点定位图标 */
+    /* 图标样式 */
     .station-pos-marker {
       background-color: var(--bvg-yellow);
       border: 3px solid #ffffff;
@@ -177,7 +190,6 @@
       box-sizing: border-box;
     }
 
-    /* --- 车辆图标样式 --- */
     .vehicle-marker-wrapper {
       position: relative;
       width: 36px;
@@ -204,7 +216,6 @@
       background-color: #555;
     }
     
-    /* 车辆类型颜色 */
     .marker-bus { background-color: #A5027D; }
     .marker-tram { background-color: #CC0000; }
     .marker-subway { background-color: var(--ubahn-blue); }
@@ -212,15 +223,13 @@
     .marker-regional { background-color: var(--db-red); }
     .marker-express { background-color: #fff; color: #333; border-color: #999; }
 
-    /* ----------------------------------------------------------- */
-    /* 浮岛菜单通用样式 (右上角菜单 & 左下角缩放) */
-    /* ----------------------------------------------------------- */
+    /* 浮岛菜单 (移至右上角) */
     .floating-menu {
       position: absolute;
       z-index: 2000;
       display: flex;
       gap: 4px;
-      background-color: rgba(30, 30, 30, 0.85); /* 默认深色半透明 */
+      background-color: rgba(30, 30, 30, 0.85);
       backdrop-filter: blur(10px);
       padding: 6px;
       border-radius: 50px;
@@ -229,23 +238,13 @@
       transition: all 0.3s;
     }
 
-    /* 右上角菜单 */
-    .top-right-menu {
+    .top-right-zoom {
       top: 20px;
       right: 20px;
-      flex-direction: row;
-      padding: 6px 8px;
-    }
-
-    /* 1. 左下角缩放菜单 */
-    .bottom-left-zoom {
-      bottom: 20px;
-      left: 20px;
-      flex-direction: column; /* 垂直排列 */
+      flex-direction: column;
       padding: 6px;
     }
 
-    /* 光明模式下的浮岛菜单样式 */
     body.light-mode .floating-menu {
        background-color: rgba(255, 255, 255, 0.9);
        border: 1px solid rgba(0,0,0,0.1);
@@ -266,100 +265,65 @@
       transition: all 0.2s ease;
       font-size: 1.1rem;
     }
-    
     body.light-mode .menu-btn { color: #555; }
-
-    .menu-btn:hover {
-      background-color: rgba(255, 255, 255, 0.15);
-      color: var(--bvg-yellow);
-      transform: scale(1.05);
-    }
-    body.light-mode .menu-btn:hover {
-      background-color: rgba(0, 0, 0, 0.05);
-      color: #d4c800;
-    }
+    .menu-btn:hover { background-color: rgba(255, 255, 255, 0.15); color: var(--bvg-yellow); transform: scale(1.05); }
+    body.light-mode .menu-btn:hover { background-color: rgba(0, 0, 0, 0.05); color: #d4c800; }
     
-    /* Radar Status Styles */
-    .radar-status-wrapper {
-      display: flex;
-      align-items: center;
-      margin-left: 12px;
-      position: relative;
-    }
-
-    .radar-status-icon {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      transition: all 0.3s ease;
-      position: relative;
-    }
-
-    .radar-status-icon.active {
-      color: var(--bvg-yellow);
-      animation: pulse 2s infinite;
-    }
-    body.light-mode .radar-status-icon.active {
-       color: #d4c800; 
-    }
-
-    .radar-status-icon.error {
-      color: #ff4444;
-      animation: none;
-    }
-
-    .radar-status-icon.error::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 140%;
-      height: 2px;
-      background-color: #ff4444;
-      transform: translate(-50%, -50%) rotate(-45deg);
-      box-shadow: 0 0 2px rgba(0,0,0,0.5);
-    }
-
-    .radar-error-text {
-      font-size: 0.7rem;
-      color: #ff4444;
-      margin-left: 6px;
-      font-weight: bold;
-      text-transform: uppercase;
-      white-space: nowrap;
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes pulse { 
-      0% { opacity: 0.6; text-shadow: 0 0 0 rgba(240, 228, 0, 0); } 
-      50% { opacity: 1; text-shadow: 0 0 8px rgba(240, 228, 0, 0.6); } 
-      100% { opacity: 0.6; text-shadow: 0 0 0 rgba(240, 228, 0, 0); } 
-    }
-    @keyframes fadeIn { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
-
-    /* 1. 时间显示区域 */
+    /* 1. Header (Section Time) */
     .section-time {
-      padding: 15px;
-      text-align: center;
+      padding: 8px 15px; 
       background-color: var(--bg-section);
       border-bottom: 1px solid var(--border-color);
       display: flex;
-      justify-content: center;
+      justify-content: space-between; 
       align-items: center;
       transition: background-color 0.3s;
+      height: 50px; 
+    }
+
+    .time-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .clock-display {
       font-family: 'Courier New', monospace;
-      font-size: 1.8rem;
+      font-size: 1.25rem; 
       font-weight: bold;
       color: var(--bvg-yellow);
-      letter-spacing: 2px;
+      letter-spacing: 1px;
     }
     body.light-mode .clock-display { color: #d4c800; }
 
-    /* 2. 搜索与过滤区域 */
+    /* Header 里面的操作按钮样式 */
+    .header-actions {
+        display: flex;
+        gap: 2px;
+    }
+    
+    .header-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+    .header-btn:hover {
+        background-color: var(--hover-bg);
+        color: var(--text-main);
+    }
+
+    /* 搜索与过滤区域 */
     .section-search {
-      padding: 15px;
+      padding: 12px 15px;
       border-bottom: 1px solid var(--border-color);
       background-color: var(--bg-sidebar);
       position: relative;
@@ -376,17 +340,16 @@
       background-color: var(--bg-input);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 10px 15px;
-      padding-right: 80px;
+      padding: 8px 12px;
+      padding-right: 45px; 
       border-radius: 6px;
       width: 100%;
+      font-size: 0.95rem;
       transition: all 0.3s;
     }
 
     .form-control-dark:focus {
-      background-color: var(--bg-input);
       border-color: var(--bvg-yellow);
-      color: var(--text-main);
       box-shadow: 0 0 0 0.2rem rgba(240, 228, 0, 0.25);
     }
 
@@ -401,33 +364,26 @@
       padding: 5px;
       transition: color 0.2s;
     }
-    
     .input-action-btn:hover { color: var(--text-main); }
-
-    .clear-btn { right: 45px; }
-    .location-btn { right: 10px; }
-    .location-btn:hover { color: var(--bvg-yellow); }
+    .clear-btn { right: 10px; } 
 
     .filter-toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
-
-    .filter-group {
-      display: flex;
-      gap: 5px;
-    }
+    
+    .filter-group { display: flex; gap: 4px; }
 
     .type-btn {
-      width: 38px;
-      height: 38px;
+      width: 34px; 
+      height: 34px;
       border: none;
       border-radius: 4px;
       color: #fff;
       font-weight: bold;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -437,45 +393,27 @@
       background-color: #444;
     }
     body.light-mode .type-btn { background-color: #e0e0e0; color: #555; }
-
-    .type-btn:hover {
-      transform: scale(1.05);
-      opacity: 0.7;
-    }
-
-    .type-btn.active {
-      opacity: 1;
-      transform: scale(1.0);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      color: #fff; 
-    }
-    
-    /* 2. 光明模式下，激活的按钮（除了 Fern）强制白色文字 */
-    body.light-mode .type-btn.active:not(.btn-fern) {
-        color: #ffffff !important;
-    }
+    .type-btn:hover { transform: scale(1.05); opacity: 0.7; }
+    .type-btn.active { opacity: 1; transform: scale(1.0); box-shadow: 0 2px 4px rgba(0,0,0,0.3); color: #fff; }
+    body.light-mode .type-btn.active:not(.btn-fern) { color: #ffffff !important; }
 
     .type-btn.active.btn-s { background-color: #008D4F; }
     .type-btn.active.btn-u { background-color: var(--ubahn-blue); }
     .type-btn.active.btn-tram { background-color: #CC0000; }
     .type-btn.active.btn-bus { background-color: #A5027D; }
     .type-btn.active.btn-re { background-color: #EC0016; } 
-    .type-btn.active.btn-fern { 
-        background-color: var(--ice-bg); 
-        color: var(--ice-text); 
-        border: 1px solid var(--ice-border);
-    } 
+    .type-btn.active.btn-fern { background-color: var(--ice-bg); color: var(--ice-text); border: 1px solid var(--ice-border); } 
 
     .duration-select {
       background-color: var(--bg-input);
       border: 1px solid var(--border-color);
       color: var(--text-main);
       border-radius: 4px;
-      padding: 5px 8px;
+      padding: 4px 6px;
       font-size: 0.85rem;
       cursor: pointer;
       outline: none;
-      height: 38px;
+      height: 34px;
     }
 
     .search-dropdown {
@@ -492,51 +430,48 @@
       box-shadow: var(--shadow-soft);
       border-radius: 0 0 6px 6px;
     }
-
-    .search-item {
-      padding: 10px 15px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border-color);
-      color: var(--text-main);
-    }
-
+    .search-item { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
     .search-item:hover { background-color: var(--hover-bg); }
-
-    .star-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      padding: 5px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .star-btn:hover { transform: scale(1.2); }
+    .star-btn { background: none; border: none; color: var(--text-muted); font-size: 1.1rem; padding: 5px; cursor: pointer; }
     .star-btn.starred { color: var(--bvg-yellow); }
     body.light-mode .star-btn.starred { color: #d4c800; }
     
-    .fav-header {
-      padding: 8px 15px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      background-color: var(--bg-section);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+    .fav-header { padding: 8px 15px; font-size: 0.75rem; color: var(--text-muted); background-color: var(--bg-section); text-transform: uppercase; letter-spacing: 1px; }
 
-    /* 3. 信息列表区域 */
+    /* 3. 信息列表区域 (Info States) */
     .section-info {
-      flex-grow: 1;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       overflow-y: auto;
       padding: 10px;
+      overflow-x: hidden; 
+    }
+
+    /* 状态 1: Full (默认) */
+    .section-info.state-full {
+        flex-grow: 1;
+        height: auto; /* 自动填充剩余空间 */
+    }
+
+    /* 状态 2: Half (约3个看板) */
+    .section-info.state-half {
+        flex-grow: 0;
+        height: 35vh; /* 约 3-4 个卡片的高度 */
+        min-height: 200px;
+    }
+
+    /* 状态 3: Collapsed (全收) */
+    .section-info.state-collapsed {
+        flex-grow: 0;
+        height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        opacity: 0;
+        border-bottom: none;
     }
 
     .bus-card {
       background-color: var(--bg-card);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       border-radius: 6px;
       padding: 0;
       transition: all 0.2s ease;
@@ -544,65 +479,17 @@
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+    .bus-card:hover { background-color: var(--hover-bg); }
+    .bus-card.cancelled { opacity: 0.65; border-left-color: var(--text-muted) !important; }
+    .bus-card.cancelled .dest-text, .bus-card.cancelled .line-badge { text-decoration: line-through; color: var(--text-muted); }
+    .bus-card.cancelled .line-badge { background-color: var(--text-muted) !important; color: #fff !important; }
+    .cancel-text { color: #ff5555; font-weight: bold; font-size: 0.9rem; text-transform: none; letter-spacing: 0.5px; }
 
-    .bus-card:hover {
-      background-color: var(--hover-bg);
-    }
+    .card-header { padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .card-info-left { flex: 1; min-width: 0; display: flex; flex-direction: column; margin-right: 10px; }
+    .card-time-right { flex-shrink: 0; text-align: right; min-width: 85px; }
 
-    .bus-card.cancelled {
-      opacity: 0.65;
-    }
-    
-    .bus-card.cancelled .dest-text,
-    .bus-card.cancelled .line-badge {
-      text-decoration: line-through;
-      color: var(--text-muted);
-    }
-
-    .cancel-text {
-      color: #ff5555;
-      font-weight: bold;
-      font-size: 0.9rem;
-      text-transform: none;
-      letter-spacing: 0.5px;
-    }
-
-    .bus-card.cancelled {
-      border-left-color: var(--text-muted) !important;
-    }
-    
-    .bus-card.cancelled .line-badge {
-      background-color: var(--text-muted) !important;
-      color: #fff !important;
-    }
-
-    /* 布局调整：修复对齐 */
-    .card-header {
-      padding: 12px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center; 
-    }
-
-    .card-info-left {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      margin-right: 10px;
-    }
-
-    .card-time-right {
-      flex-shrink: 0;
-      text-align: right;
-      min-width: 85px;
-    }
-
-    .bus-card.departed {
-      opacity: 0.5;
-      filter: grayscale(1);
-    }
+    .bus-card.departed { opacity: 0.5; filter: grayscale(1); }
 
     .product-bus { border-left-color: #A5027D; }
     .product-tram { border-left-color: #CC0000; }
@@ -611,19 +498,8 @@
     .product-regional { border-left-color: var(--db-red); }
     .product-express { border-left-color: #cccccc; }
 
-    @keyframes breathe-green {
-      0% { box-shadow: 0 0 0 0 rgba(77, 255, 77, 0.6); }
-      70% { box-shadow: 0 0 0 5px rgba(77, 255, 77, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(77, 255, 77, 0); }
-    }
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      margin-left: 8px;
-      flex-shrink: 0;
-      display: inline-block;
-    }
+    @keyframes breathe-green { 0% { box-shadow: 0 0 0 0 rgba(77, 255, 77, 0.6); } 70% { box-shadow: 0 0 0 5px rgba(77, 255, 77, 0); } 100% { box-shadow: 0 0 0 0 rgba(77, 255, 77, 0); } }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; margin-left: 8px; flex-shrink: 0; display: inline-block; }
     .status-green { background-color: #4dff4d; animation: breathe-green 2s infinite; }
     .status-orange { background-color: #ffaa00; }
     .status-red { background-color: #ff3333; }
@@ -634,15 +510,15 @@
       background-color: #fff;
       color: #000;
       font-weight: 800;
-      padding: 2px 6px;
+      padding: 1px 5px;
       border-radius: 3px;
-      font-size: 0.9rem;
-      min-width: 45px;
+      font-size: 0.85rem;
+      min-width: 42px;
       text-align: center;
       display: inline-block;
       flex-shrink: 0;
       margin-right: 8px;
-      border: 1px solid rgba(0,0,0,0.1); /* Subtle border for light mode */
+      border: 1px solid rgba(0,0,0,0.1); 
     }
     
     .product-subway .line-badge { background-color: var(--ubahn-blue); color: white; }
@@ -652,64 +528,66 @@
     .product-regional .line-badge { background-color: var(--db-red); color: white; }
     .product-express .line-badge { background-color: var(--ice-bg); color: var(--ice-text); border: 1px solid var(--ice-border); }
 
-    .dest-text {
-      font-size: 0.95rem;
-      color: var(--text-main); /* Changed to variable */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      transition: color 0.3s;
-    }
+    .dest-text { font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.3s; }
     body.light-mode .dest-text { font-weight: 600; }
+    .time-large { font-size: 1.05rem; font-weight: bold; color: var(--text-main); line-height: 1.2; }
+    .time-sub { font-size: 0.7rem; color: var(--text-sub); text-align: right; margin-top: 2px; }
 
-    .time-large {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: var(--text-main); /* Changed to variable */
-      line-height: 1.2;
-    }
-
-    .time-sub {
-      font-size: 0.75rem;
-      color: var(--text-sub); /* Changed to variable */
-      text-align: right;
-      margin-top: 4px;
-    }
-
-    .stopover-container {
-      background-color: rgba(0, 0, 0, 0.2);
-      padding: 10px 15px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    body.light-mode .stopover-container {
-      background-color: rgba(0, 0, 0, 0.03);
-      border-top: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .stopover-item {
-      display: flex;
-      align-items: center;
-      padding: 4px 0;
-      min-width: 0;
-    }
-    .stopover-time { width: 45px; font-size: 0.8rem; color: var(--text-muted); flex-shrink: 0; }
-    .stopover-node { width: 8px; height: 8px; border-radius: 50%; background-color: #aaa; margin: 0 10px; flex-shrink: 0; }
-    .stopover-name {
-      font-size: 0.85rem;
-      color: var(--text-sub);
-      flex: 1;
-      min-width: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
+    .stopover-container { background-color: rgba(0, 0, 0, 0.2); padding: 8px 12px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+    body.light-mode .stopover-container { background-color: rgba(0, 0, 0, 0.03); border-top: 1px solid rgba(0, 0, 0, 0.05); }
+    .stopover-item { display: flex; align-items: center; padding: 3px 0; min-width: 0; }
+    .stopover-time { width: 45px; font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0; }
+    .stopover-node { width: 6px; height: 6px; border-radius: 50%; background-color: #aaa; margin: 0 10px; flex-shrink: 0; }
+    .stopover-name { font-size: 0.8rem; color: var(--text-sub); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .weiter-btn { width: 100%; background: none; border: 1px dashed var(--border-color); color: var(--text-muted); font-size: 0.75rem; padding: 4px; margin-top: 8px; border-radius: 4px; }
     .weiter-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
 
+    /* 4. 底部折叠控制条 */
+    .sidebar-footer-toggle {
+        height: 24px;
+        background-color: var(--bg-toggle);
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: background-color 0.2s, color 0.2s;
+        flex-shrink: 0; /* 防止被挤压 */
+        font-size: 0.8rem;
+    }
+    .sidebar-footer-toggle:hover {
+        background-color: var(--hover-bg);
+        color: var(--bvg-yellow);
+    }
+    body.light-mode .sidebar-footer-toggle:hover { color: #d4c800; }
+
+    @keyframes pulse { 0% { opacity: 0.6; text-shadow: 0 0 0 rgba(240, 228, 0, 0); } 50% { opacity: 1; text-shadow: 0 0 8px rgba(240, 228, 0, 0.6); } 100% { opacity: 0.6; text-shadow: 0 0 0 rgba(240, 228, 0, 0); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* Mobile 专用样式修改 */
     @media (max-width: 768px) {
       #app { flex-direction: column; }
-      .sidebar { width: 100%; height: 50%; }
+      
+      .sidebar { 
+        width: 100%; 
+        /* 移除 max-height: 60% 限制，由类名控制 */
+        transition: height 0.3s ease, flex-grow 0.3s ease;
+      }
+
+      /* 状态 1 Full: Sidebar 占满屏幕 */
+      .sidebar.mobile-full {
+          height: 100%;
+          flex-grow: 1;
+          /* 此时 map-container 会被挤到底部不可见，或者通过 overflow 处理 */
+      }
+
+      /* 状态 2/3: Sidebar 自动高度 */
+      .sidebar.mobile-auto {
+          height: auto;
+          flex-grow: 0;
+      }
+      
       .map-container { flex-grow: 1; }
     }
   </style>
@@ -717,16 +595,18 @@
 <body>
   <div id="app">
     <!-- 左侧 Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" :class="sidebarMobileClass">
+      <!-- 1. 顶部 Time Section -->
       <div class="section-time">
-        <div class="clock-display">{{ currentTime }}</div>
-        <!-- RSS Radar Icon -->
-        <div class="radar-status-wrapper">
-          <i class="fas fa-rss radar-status-icon" 
-             :class="{ 'active': isRadarActive, 'error': radarError }" 
-             :title="radarError ? 'Kein Signal' : 'Live Radar'">
-          </i>
-          <span v-if="radarError" class="radar-error-text">Kein Signal</span>
+        <div class="time-wrapper">
+            <div class="clock-display">{{ currentTime }}</div>
+        </div>
+
+        <div class="header-actions">
+             <button class="header-btn" @click="toggleTheme" :title="isDarkMode ? 'Helles Design' : 'Dunkles Design'">
+                <i class="fas" :class="isDarkMode ? 'fa-moon' : 'fa-sun'"></i>
+             </button>
+             <button class="header-btn" title="Sprache"><i class="fas fa-globe"></i></button>
         </div>
       </div>
 
@@ -742,9 +622,6 @@
           />
           <button v-if="searchQuery" @click="clearSearch" class="input-action-btn clear-btn">
             <i class="fas fa-times"></i>
-          </button>
-          <button @click="locateMe" class="input-action-btn location-btn">
-            <i class="fas fa-location-arrow"></i>
           </button>
         </div>
 
@@ -790,11 +667,15 @@
         </div>
       </div>
 
-      <!-- 信息列表 -->
-      <div class="section-info">
+      <!-- 3. 信息列表 (Dynamic Info State) -->
+      <div class="section-info" :class="infoStateClass">
         <div v-if="loading" class="text-center py-4">
           <div class="spinner-border text-warning" role="status"></div>
           <div class="mt-2 small" style="color: var(--text-muted)">Lade Abfahrten...</div>
+        </div>
+
+        <div v-else-if="departures.length === 0 && !loading && currentStation" class="text-center py-4 text-muted">
+           <small>Keine Abfahrten in den nächsten {{duration}} Min.</small>
         </div>
 
         <div
@@ -846,23 +727,20 @@
           </div>
         </div>
       </div>
+
+      <!-- 3. 底部控制条 (3-State Toggle) -->
+      <div class="sidebar-footer-toggle" @click="toggleInfoState" title="Ansicht ändern">
+          <!-- 图标随状态变化 -->
+          <i class="fas" :class="toggleIcon"></i>
+      </div>
     </div>
 
     <!-- 右侧地图 -->
     <div class="map-container">
       <div id="map"></div>
       
-      <!-- 浮岛：右上角菜单 -->
-      <div class="floating-menu top-right-menu">
-        <button class="menu-btn" @click="toggleTheme" :title="isDarkMode ? 'Helles Design' : 'Dunkles Design'">
-          <i class="fas" :class="isDarkMode ? 'fa-moon' : 'fa-sun'"></i>
-        </button>
-        <button class="menu-btn" title="Barrierefreiheit"><i class="fas fa-universal-access"></i></button>
-        <button class="menu-btn" title="Sprache"><i class="fas fa-globe"></i></button>
-      </div>
-
-      <!-- 1. 浮岛：左下角缩放控件 (新建) -->
-      <div class="floating-menu bottom-left-zoom">
+      <!-- 缩放控件移到右上角 -->
+      <div class="floating-menu top-right-zoom">
         <button class="menu-btn" @click="zoomIn" title="Vergrößern"><i class="fas fa-plus"></i></button>
         <button class="menu-btn" @click="zoomOut" title="Verkleinern"><i class="fas fa-minus"></i></button>
       </div>
@@ -892,15 +770,18 @@
         const departuresRaw = ref([]);
         const loading = ref(false);
         const activeFilters = ref(['suburban', 'subway', 'tram', 'bus', 'regional', 'express']);
-        // 3. 默认时间改为 30 分钟
         const duration = ref(30);
         
         const expandedTripId = ref(null);
         const currentTripStopovers = ref([]);
         const isTripLoading = ref(false);
         const stopoverLimit = ref(5);
+        
         const isRadarActive = ref(false);
         const radarError = ref(false);
+
+        // State for Info Area: 2 = Full, 1 = Half, 0 = Collapsed
+        const infoState = ref(2);
 
         const lastRadarData = ref([]);
 
@@ -933,7 +814,31 @@
           isDarkMode.value = !isDarkMode.value;
         };
         
-        // Map Zoom Functions
+        // 3-State Toggle Logic
+        const toggleInfoState = () => {
+            // Cycle: Full (2) -> Half (1) -> Collapsed (0) -> Full (2)
+            if (infoState.value === 2) infoState.value = 1;
+            else if (infoState.value === 1) infoState.value = 0;
+            else infoState.value = 2;
+        };
+
+        const infoStateClass = computed(() => {
+            if (infoState.value === 2) return 'state-full';
+            if (infoState.value === 1) return 'state-half';
+            return 'state-collapsed';
+        });
+
+        const sidebarMobileClass = computed(() => {
+            if (infoState.value === 2) return 'mobile-full';
+            return 'mobile-auto';
+        });
+
+        const toggleIcon = computed(() => {
+            if (infoState.value === 2) return 'fa-chevron-down'; // Full -> Click to go Half
+            if (infoState.value === 1) return 'fa-angles-down'; // Half -> Click to Collapse
+            return 'fa-chevron-up'; // Collapsed -> Click to Full
+        });
+
         const zoomIn = () => { if (map) map.zoomIn(); };
         const zoomOut = () => { if (map) map.zoomOut(); };
 
@@ -947,8 +852,28 @@
           }
         });
 
+        watch([isRadarActive, radarError], () => {
+            updateStationMarkerTooltip();
+        });
+
+        const updateStationMarkerTooltip = () => {
+            if (!stationMarker || !currentStation.value) return;
+
+            const name = cleanName(currentStation.value.name);
+            let iconHtml = '';
+
+            if (radarError.value) {
+                iconHtml = '<i class="fas fa-rss map-radar-icon error"></i>';
+            } else if (isRadarActive.value) {
+                iconHtml = '<i class="fas fa-rss map-radar-icon active"></i>';
+            } else {
+                 iconHtml = '<i class="fas fa-rss map-radar-icon inactive" style="display:none"></i>';
+            }
+            
+            stationMarker.setTooltipContent(`<div>${name} ${iconHtml}</div>`);
+        };
+
         onMounted(() => {
-          // Disable default zoom control
           map = L.map("map", { zoomControl: false }).setView([52.5200, 13.4050], 13);
           
           baseLayer = L.tileLayer(isDarkMode.value ? DARK_TILES : LIGHT_TILES, {
@@ -1058,22 +983,6 @@
 
         const visibleStopovers = computed(() => currentTripStopovers.value.slice(0, stopoverLimit.value));
 
-        const locateMe = () => {
-          loading.value = true;
-          navigator.geolocation.getCurrentPosition(async (pos) => {
-            const { latitude, longitude } = pos.coords;
-            try {
-              const res = await axios.get(`${API_BASE}/stops/nearby`, { params: { latitude, longitude, results: 8, distance: 2000 } });
-              searchResults.value = res.data;
-              if (res.data.length > 0) {
-                searchQuery.value = "Ihr Standort";
-                map.setView([latitude, longitude], 15);
-              }
-            } catch(e) { console.error(e); }
-            loading.value = false;
-          }, () => { loading.value = false; alert("Geo-Zugriff verweigert."); });
-        };
-
         const onSearchInput = () => {
           if (searchTimeout) clearTimeout(searchTimeout);
           
@@ -1107,6 +1016,11 @@
           currentStation.value = station;
           searchResults.value = []; 
           searchQuery.value = cleanName(station.name); 
+          
+          // 如果列表是全收起状态，选中站点时自动切到 Full
+          if (infoState.value === 0) {
+              infoState.value = 2;
+          }
 
           if (radarInterval) clearInterval(radarInterval);
           
@@ -1137,13 +1051,15 @@
 
             stationMarker = L.marker([lat, lon], { icon: stationIcon })
               .addTo(map)
-              .bindTooltip(cleanName(station.name), { 
+              .bindTooltip("", {
                 permanent: true,       
                 direction: 'top',      
                 offset: [0, -14],  
                 className: 'station-tooltip' 
               })
               .openTooltip();
+            
+            updateStationMarkerTooltip();
 
             stationCircle = L.circle([lat, lon], {
               color: '#F0E400',       
@@ -1204,12 +1120,14 @@
                 });
                 
                 const allVehicles = Array.isArray(res.data) ? res.data : (res.data.movements || []);
+                
+                isRadarActive.value = true;
+                radarError.value = false;
+
                 if (!Array.isArray(allVehicles)) return; 
                 
                 lastRadarData.value = allVehicles;
                 updateVehicleMarkers(allVehicles);
-                isRadarActive.value = true;
-                radarError.value = false;
 
             } catch (e) {
                 if (axios.isCancel(e)) return; 
@@ -1368,13 +1286,14 @@
         };
 
         return {
-          currentTime, searchQuery, searchResults, departures, loading, duration,
+          currentTime, searchQuery, searchResults, departures, loading, duration, currentStation,
           isTypeActive, toggleType, selectStation, onSearchInput, clearSearch,
-          locateMe, formatTime, formatAbsTime, getDelayClass, isDeparted, getProductClass: (p) => `product-${p}`,
+          formatTime, formatAbsTime, getDelayClass, isDeparted, getProductClass: (p) => `product-${p}`,
           onDurationChange: () => fetchDepartures(currentStation.value.id), expandedTripId, toggleTrip, isTripLoading,
           currentTripStopovers, visibleStopovers, stopoverLimit,
           starredStations, isStarred, toggleStar, displayResults, isShowingFavorites, showFavorites, isRadarActive, radarError, cleanName,
-          isDarkMode, toggleTheme, zoomIn, zoomOut
+          isDarkMode, toggleTheme, zoomIn, zoomOut,
+          infoState, toggleInfoState, infoStateClass, sidebarMobileClass, toggleIcon
         };
       }
     }).mount("#app");
