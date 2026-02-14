@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Abfahrtsmonitor Berlin (Final Logic V2)</title>
+  <title>Abfahrtsmonitor Berlin (Layered Mobile)</title>
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <!-- Font Awesome -->
@@ -83,9 +83,10 @@
       display: flex;
       height: 100%;
       width: 100%;
+      position: relative; /* 为绝对定位子元素提供基准 */
     }
 
-    /* 左侧边栏 */
+    /* 左侧边栏 (默认桌面样式) */
     .sidebar {
       width: 380px;
       min-width: 320px;
@@ -98,7 +99,7 @@
       transition: background-color 0.3s ease, height 0.3s ease;
     }
 
-    /* 右侧地图 */
+    /* 右侧地图 (默认桌面样式) */
     .map-container {
       flex-grow: 1;
       height: 100%;
@@ -270,35 +271,59 @@
     
     /* 1. Header (Section Time) */
     .section-time {
-      padding: 8px 15px; 
+      padding: 0 15px; /* 进一步减少内边距 */
       background-color: var(--bg-section);
       border-bottom: 1px solid var(--border-color);
       display: flex;
-      justify-content: space-between; 
+      justify-content: flex-end; 
       align-items: center;
       transition: background-color 0.3s;
-      height: 50px; 
-      flex-shrink: 0; /* 防止压缩 */
+      height: 40px; /* 高度减小至 40px */
+      flex-shrink: 0; 
+      position: relative; 
     }
 
-    .time-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .clock-display {
-      font-family: 'Courier New', monospace;
-      font-size: 1.25rem; 
-      font-weight: bold;
+    /* 中间的标题/时间显示 */
+    .header-center-display {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 800;
+      font-size: 1.1rem; /* 统一字体大小 */
+      cursor: pointer;
+      user-select: none;
+      
+      /* 纯色黄 */
       color: var(--bvg-yellow);
-      letter-spacing: 1px;
+      
+      /* 简单的点击缩放效果反馈 */
+      transition: transform 0.1s;
+      
+      z-index: 10;
+      width: 220px; 
+      text-align: center;
+      white-space: nowrap;
     }
-    body.light-mode .clock-display { color: #d4c800; }
+    body.light-mode .header-center-display {
+      /* 在浅色模式下，如果黄色太亮看不清，可以微调，或者保持原品牌色 */
+      color: #d4c800; 
+    }
+    
+    .header-center-display:active {
+        transform: translateX(-50%) scale(0.95);
+    }
+
+    /* 当显示时间时使用等宽字体，但保持大小一致 */
+    .header-center-display.is-time {
+        font-family: 'Courier New', monospace;
+        letter-spacing: 1px;
+        font-weight: 700;
+    }
 
     .header-actions {
         display: flex;
         gap: 2px;
+        z-index: 11; 
     }
     
     .header-btn {
@@ -313,7 +338,7 @@
         justify-content: center;
         cursor: pointer;
         transition: all 0.2s;
-        font-size: 0.9rem;
+        font-size: 0.85rem; /* 稍微调小图标 */
     }
     .header-btn:hover {
         background-color: var(--hover-bg);
@@ -326,7 +351,7 @@
       border-bottom: 1px solid var(--border-color);
       background-color: var(--bg-sidebar);
       position: relative;
-      flex-shrink: 0; /* 防止压缩 */
+      flex-shrink: 0; 
     }
 
     .search-input-wrapper {
@@ -340,7 +365,7 @@
       background-color: var(--bg-input);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 8px 12px;
+      padding: 6px 12px; /* 稍微减少高度 */
       padding-right: 45px; 
       border-radius: 6px;
       width: 100%;
@@ -377,8 +402,8 @@
     .filter-group { display: flex; gap: 4px; }
 
     .type-btn {
-      width: 34px; 
-      height: 34px;
+      width: 32px; 
+      height: 32px;
       border: none;
       border-radius: 4px;
       color: #fff;
@@ -413,7 +438,7 @@
       font-size: 0.85rem;
       cursor: pointer;
       outline: none;
-      height: 34px;
+      height: 32px;
     }
 
     .search-dropdown {
@@ -444,15 +469,17 @@
       overflow-y: auto;
       padding: 10px;
       overflow-x: hidden; 
+      /* 保证在手机Layer模式下有背景色，遮挡下面的地图 */
+      background-color: var(--bg-sidebar); 
     }
 
     /* 状态 1: Full (默认) */
     .section-info.state-full {
         flex-grow: 1;
-        height: auto; /* 自动填充剩余空间 */
+        height: auto; 
     }
 
-    /* 状态 2: Half (约3个看板) - 高度调整为约190px */
+    /* 状态 2: Half (约3个看板) */
     .section-info.state-half {
         flex-grow: 0;
         height: 190px; 
@@ -553,9 +580,8 @@
         cursor: pointer;
         color: var(--text-muted);
         transition: background-color 0.2s, color 0.2s;
-        flex-shrink: 0; /* 防止被挤压 */
+        flex-shrink: 0; 
         font-size: 0.8rem;
-        /* 确保常驻底部且可见 */
         z-index: 1002;
     }
     .sidebar-footer-toggle:hover {
@@ -567,28 +593,47 @@
     @keyframes pulse { 0% { opacity: 0.6; text-shadow: 0 0 0 rgba(240, 228, 0, 0); } 50% { opacity: 1; text-shadow: 0 0 8px rgba(240, 228, 0, 0.6); } 100% { opacity: 0.6; text-shadow: 0 0 0 rgba(240, 228, 0, 0); } }
     @keyframes fadeIn { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
 
-    /* Mobile 专用样式修改 */
+    /* Mobile 专用样式修改 (Layered Logic) */
     @media (max-width: 768px) {
-      #app { flex-direction: column; }
+      /* 将 #app 改为相对定位，不再是 flex 行布局，以便图层叠加 */
+      #app { display: block; position: relative; }
       
-      .sidebar { 
+      /* 地图层 (Layer 2) - 永远全屏垫底 */
+      .map-container { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
         width: 100%; 
-        transition: height 0.3s ease, flex-grow 0.3s ease;
+        height: 100%; 
+        z-index: 0; 
+      }
+      
+      /* 信息层 (Layer 1) - 浮在地图之上 */
+      .sidebar { 
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%; 
+        /* 默认最大高度100%，实际高度由内容和 state 类控制 */
+        max-height: 100%; 
+        z-index: 1000;
+        transition: height 0.3s ease;
+        /* 添加阴影区分图层 */
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
       }
 
-      /* 状态 1 Full: Sidebar 占满屏幕 */
+      /* 状态 1 Full: Sidebar 占满整个屏幕 */
       .sidebar.mobile-full {
           height: 100%;
-          flex-grow: 1;
+          /* 确保背景色不透明 */
+          background-color: var(--bg-sidebar);
       }
 
-      /* 状态 2/3: Sidebar 自动高度 */
+      /* 状态 2/3: Sidebar 自动高度 (收缩或半屏) */
       .sidebar.mobile-auto {
           height: auto;
-          flex-grow: 0;
+          /* 此时底部会露出地图层 */
       }
-      
-      .map-container { flex-grow: 1; }
     }
   </style>
 </head>
@@ -598,8 +643,12 @@
     <div class="sidebar" :class="sidebarMobileClass">
       <!-- 1. 顶部 Time Section -->
       <div class="section-time">
-        <div class="time-wrapper">
-            <div class="clock-display">{{ currentTime }}</div>
+        <!-- 中间：时间/标题切换 -->
+        <div class="header-center-display" 
+             :class="{ 'is-time': !showTitle }" 
+             @click="toggleHeaderDisplay"
+             title="Umschalten">
+             {{ headerText }}
         </div>
 
         <div class="header-actions">
@@ -782,6 +831,11 @@
 
         // State for Info Area: 2 = Full, 1 = Half, 0 = Collapsed
         const infoState = ref(2);
+
+        // Toggle Title/Time
+        const showTitle = ref(false);
+        const toggleHeaderDisplay = () => { showTitle.value = !showTitle.value; };
+        const headerText = computed(() => showTitle.value ? "Abfahrtsmonitor" : currentTime.value);
 
         const lastRadarData = ref([]);
 
@@ -1299,7 +1353,8 @@
           currentTripStopovers, visibleStopovers, stopoverLimit,
           starredStations, isStarred, toggleStar, displayResults, isShowingFavorites, showFavorites, isRadarActive, radarError, cleanName,
           isDarkMode, toggleTheme, zoomIn, zoomOut,
-          infoState, toggleInfoState, infoStateClass, sidebarMobileClass, toggleIcon
+          infoState, toggleInfoState, infoStateClass, sidebarMobileClass, toggleIcon,
+          showTitle, toggleHeaderDisplay, headerText
         };
       }
     }).mount("#app");
