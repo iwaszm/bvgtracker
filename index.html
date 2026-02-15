@@ -656,7 +656,9 @@
     .settings-action-btn { flex: 1; padding: 10px; border-radius: 6px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; }
     .settings-action-btn:hover { background-color: var(--hover-bg); border-color: var(--bvg-yellow); }
 
-    .line-filter-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+    /* Modified Grid Columns: 5 columns now */
+    .line-filter-list { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; }
+    
     .line-toggle { 
        background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); 
        padding: 5px; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: center; 
@@ -668,17 +670,16 @@
     .line-toggle i { font-size: 10px; }
 
     /* Fix station name color in dashboard */
-    /* 修改：移除了 font-weight: 600 */
     .station-info-label { color: var(--text-main) !important; font-weight: 400; }
     .station-pill-static { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background-color: var(--bg-input); border-radius: 6px; border: 1px solid var(--border-color); height: 36px; }
 
-    /* 新增 Reset Icon Button 样式 */
+    /* Modified Reset Icon Button: Smaller */
     .reset-icon-btn {
         background: none;
         border: none;
         color: var(--text-muted);
-        font-size: 12px;
-        padding: 4px;
+        font-size: 10px; /* Reduced from 12px */
+        padding: 0 4px; /* Reduced padding */
         cursor: pointer;
         transition: color 0.2s;
         display: flex;
@@ -731,7 +732,8 @@
                 <!-- Section 1: Manage Stations (2 Slots) -->
                 <div class="settings-section">
                     <div class="settings-section-title d-flex justify-content-between align-items-center">
-                        <span>Stationen verwalten</span>
+                        <!-- Renamed to Beobachtete Stationen -->
+                        <span>Beobachtete Stationen</span>
                         <!-- New Reset Button for Stations -->
                         <button class="reset-icon-btn" @click="resetStations" v-if="station1 || station2" title="Stationen zurücksetzen">
                             <i class="fas fa-undo-alt"></i>
@@ -786,7 +788,8 @@
                 <!-- Section 2: Line Filter -->
                 <div class="settings-section">
                     <div class="settings-section-title d-flex justify-content-between align-items-center">
-                        <span>Linienfilter</span>
+                        <!-- Renamed to Beobachtete Linien -->
+                        <span>Beobachtete Linien</span>
                         <!-- Modified Reset Button (Icon) -->
                         <button class="reset-icon-btn" @click="resetLineFilters" v-if="excludedLines.size > 0" title="Filter zurücksetzen">
                             <i class="fas fa-undo-alt"></i>
@@ -1410,36 +1413,61 @@
         
         const fetchRadar = async () => {
             if (watchedStations.value.length === 0) return;
-            const centerStation = watchedStations.value[watchedStations.value.length - 1]; 
-            
-            if (!centerStation.location) return;
-            
-            const { latitude, longitude } = centerStation.location;
-            const bbox = getBoundingBox(latitude, longitude, 2.0);
 
+            // Cancel previous request if any
             if (radarAbortController) { radarAbortController.abort(); }
             radarAbortController = new AbortController();
+            const signal = radarAbortController.signal;
 
-            try {
-                const res = await axios.get(`${API_BASE}/radar`, {
+            // Create a promise for each watched station
+            const fetchPromises = watchedStations.value.map(station => {
+                if (!station.location) return Promise.resolve([]);
+                
+                const { latitude, longitude } = station.location;
+                const bbox = getBoundingBox(latitude, longitude, 2.0); // 2km radius per station
+
+                return axios.get(`${API_BASE}/radar`, {
                     params: {
                         north: bbox.north, west: bbox.west, south: bbox.south, east: bbox.east,
                         results: 256, duration: 60, frames: 3, polylines: true 
                     },
-                    signal: radarAbortController.signal
+                    signal: signal
+                }).then(res => {
+                    return Array.isArray(res.data) ? res.data : (res.data.movements || []);
+                }).catch(e => {
+                    if (axios.isCancel(e)) throw e; // Propagate cancellation
+                    console.warn(`Radar fetch failed for ${station.name}`, e);
+                    return []; // Return empty array on error to keep other stations working
+                });
+            });
+
+            try {
+                // Wait for all requests to finish
+                const results = await Promise.all(fetchPromises);
+                
+                // Merge and Deduplicate based on tripId
+                const vehicleMap = new Map();
+                results.flat().forEach(v => {
+                    if (v && v.tripId) {
+                        // Using a Map automatically handles deduplication by tripId
+                        vehicleMap.set(v.tripId, v); 
+                    }
                 });
                 
-                const allVehicles = Array.isArray(res.data) ? res.data : (res.data.movements || []);
+                const combinedVehicles = Array.from(vehicleMap.values());
+
                 isRadarActive.value = true;
                 radarError.value = false;
-                if (!Array.isArray(allVehicles)) return; 
-                lastRadarData.value = allVehicles;
-                if (showMap.value) updateVehicleMarkers(allVehicles);
+                
+                lastRadarData.value = combinedVehicles;
+                if (showMap.value) updateVehicleMarkers(combinedVehicles);
+                
             } catch (e) {
-                if (axios.isCancel(e)) return; 
-                console.warn("Radar skipped"); 
-                isRadarActive.value = false;
-                radarError.value = true;
+                if (axios.isCancel(e)) return;
+                // Only set error if we really have no data and it wasn't a cancel
+                console.warn("Radar update skipped/failed"); 
+                // We don't set isRadarActive to false immediately to avoid flickering, 
+                // unless it persists. For now, keep visual state stable.
             }
         };
 
