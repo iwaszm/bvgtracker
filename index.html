@@ -131,7 +131,6 @@
     }
 
     /* --- MOBILE PORTRAIT OPTIMIZATIONS (Top Sheet Mode) --- */
-    /* 关键修改：增加了 and (orientation: portrait) 确保横屏时不生效 */
     @media (max-width: 767px) and (orientation: portrait) {
         #app {
             flex-direction: column;
@@ -161,6 +160,9 @@
             border-radius: 0 0 16px 16px; /* Rounded bottom corners */
             box-shadow: 0 4px 20px rgba(0,0,0,0.3); /* Shadow downwards */
             transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            
+            /* FIX 1: Allow dropdown to overflow the sidebar when collapsed */
+            overflow: visible !important;
         }
         
         /* Sidebar footer toggle: Ensure it's touch-friendly */
@@ -179,11 +181,14 @@
         .sidebar.mobile-full .section-info {
             flex-grow: 1;
             height: auto !important;
+            /* Re-enable scrolling inside the list when expanded */
+            overflow-y: auto !important;
         }
 
         /* Mobile State: Half (Medium Sheet) */
         .section-info.state-half {
             height: 35vh !important; 
+            overflow-y: auto !important;
         }
 
         /* Mobile State: Collapsed (Small Sheet - Just Header & Footer) */
@@ -191,13 +196,16 @@
             height: 0 !important;
             padding: 0 10px !important;
             border: none;
+            overflow: hidden !important; /* Hide content when collapsed */
         }
 
-        /* Adjust Zoom Controls position for mobile - move to BOTTOM RIGHT to avoid overlap */
+        /* FIX 3: Zoom Controls - Bottom Right Corner */
         .top-right-zoom {
-            top: auto;
-            bottom: 20px;
-            right: 10px;
+            top: auto !important;    /* Override default top */
+            bottom: 30px !important; /* Fix to bottom */
+            right: 20px !important;  /* Fix to right */
+            flex-direction: column;
+            align-items: flex-end; /* Align to right */
         }
         
         /* Ensure settings modal fits mobile */
@@ -366,6 +374,8 @@
       justify-content: center;
       transition: all 0.2s ease;
       font-size: 14px;
+      /* FIX 2: Prevent button deformation */
+      flex-shrink: 0; 
     }
     body.light-mode .menu-btn { color: #555; }
     .menu-btn:hover { background-color: rgba(255, 255, 255, 0.15); color: var(--bvg-yellow); transform: scale(1.05); }
