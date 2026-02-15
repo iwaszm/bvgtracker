@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Abfahrtsmonitor Berlin (All Inter)</title>
+  <title>Abfahrtsmonitor Berlin (Slider)</title>
   
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,6 +37,7 @@
       --bg-dropdown: #333333;
       --bg-tooltip: rgba(30, 30, 30, 0.95);
       --bg-toggle: #202020;
+      --bg-modal: #2b2b2b;
       
       --text-main: #ffffff;
       --text-muted: #aaaaaa;
@@ -63,6 +64,7 @@
       --bg-dropdown: #ffffff;
       --bg-tooltip: rgba(30, 30, 30, 0.95);
       --bg-toggle: #eaeaea;
+      --bg-modal: #ffffff;
       
       --text-main: #212529;
       --text-muted: #6c757d;
@@ -279,68 +281,6 @@
     .menu-btn:hover { background-color: rgba(255, 255, 255, 0.15); color: var(--bvg-yellow); transform: scale(1.05); }
     body.light-mode .menu-btn:hover { background-color: rgba(0, 0, 0, 0.05); color: #d4c800; }
     
-    /* 1. Header */
-    .section-time {
-      padding: 0 15px; 
-      background-color: var(--bg-section);
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: flex-end; 
-      align-items: center;
-      transition: background-color 0.3s;
-      height: 40px; 
-      flex-shrink: 0; 
-      position: relative; 
-    }
-
-    .header-center-display {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      
-      font-family: var(--font-main);
-      font-weight: 700; 
-      
-      font-size: 16px; 
-      cursor: pointer;
-      user-select: none;
-      color: var(--bvg-yellow);
-      transition: transform 0.1s;
-      z-index: 10;
-      width: 220px; 
-      text-align: center;
-      white-space: nowrap;
-      letter-spacing: 0.5px;
-    }
-    body.light-mode .header-center-display { color: #d4c800; }
-    .header-center-display:active { transform: translateX(-50%) scale(0.95); }
-
-    /* 顶部时间显示 */
-    .header-center-display.is-time {
-        font-family: var(--font-numbers);
-        font-feature-settings: "tnum"; /* 等宽数字 */
-        letter-spacing: 1px;
-        font-weight: 700;
-        font-size: 15px;
-    }
-
-    .header-actions { display: flex; gap: 2px; z-index: 11; }
-    .header-btn {
-        background: transparent;
-        border: none;
-        color: var(--text-muted);
-        width: 32px;
-        height: 32px;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-size: 12px; 
-    }
-    .header-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
-
     /* 搜索与过滤区域 */
     .section-search {
       padding: 12px 15px;
@@ -349,8 +289,20 @@
       position: relative;
       flex-shrink: 0; 
     }
+    
+    .main-search-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
 
-    .search-input-wrapper { position: relative; margin-bottom: 10px; display: flex; align-items: center; }
+    .search-input-wrapper { 
+        position: relative; 
+        display: flex; 
+        align-items: center; 
+        flex-grow: 1;
+    }
 
     .form-control-dark {
       background-color: var(--bg-input);
@@ -364,6 +316,7 @@
       transition: all 0.3s;
     }
     .form-control-dark:focus { border-color: var(--bvg-yellow); box-shadow: 0 0 0 0.2rem rgba(240, 228, 0, 0.25); }
+    .form-control-dark:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .input-action-btn {
       position: absolute;
@@ -381,6 +334,22 @@
 
     .filter-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
     .filter-group { display: flex; gap: 4px; }
+
+    .settings-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px; /* Matched input radius */
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-input);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .settings-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
 
     /* Filter 按钮 */
     .type-btn {
@@ -412,38 +381,51 @@
     .type-btn.active.btn-re { background-color: #EC0016; } 
     .type-btn.active.btn-fern { background-color: var(--ice-bg); color: var(--ice-text); border: 1px solid var(--ice-border); } 
 
-    .duration-select {
-      background-color: var(--bg-input);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      border-radius: 4px;
-      padding: 4px 6px;
-      font-size: 12px; 
-      cursor: pointer;
-      outline: none;
-      height: 36px; 
-      
-      /* 下拉框中的数字 */
-      font-family: var(--font-numbers);
-      font-feature-settings: "tnum"; 
+    /* Range Slider Styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      margin: 8px 0;
     }
+    input[type=range]:focus { outline: none; }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: var(--bvg-yellow);
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -6px; /* center it */
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    input[type=range]:focus::-webkit-slider-runnable-track { background: var(--hover-bg); }
 
     .search-dropdown {
       position: absolute;
       top: 100%;
-      left: 15px; 
-      right: 15px;
+      left: 0; 
+      right: 0;
       background-color: var(--bg-dropdown);
       border: 1px solid var(--border-color);
       border-top: none;
       z-index: 2000;
-      max-height: 300px;
+      max-height: 200px;
       overflow-y: auto;
       box-shadow: var(--shadow-soft);
       border-radius: 0 0 6px 6px;
     }
     .search-item { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; }
     .search-item:hover { background-color: var(--hover-bg); }
+    
     .star-btn { background: none; border: none; color: var(--text-muted); font-size: 14px; padding: 5px; cursor: pointer; }
     .star-btn.starred { color: var(--bvg-yellow); }
     body.light-mode .star-btn.starred { color: #d4c800; }
@@ -610,83 +592,202 @@
     .sidebar-footer-toggle:hover { background-color: var(--hover-bg); color: var(--bvg-yellow); }
     body.light-mode .sidebar-footer-toggle:hover { color: #d4c800; }
 
-    @keyframes pulse { 0% { opacity: 0.6; text-shadow: 0 0 0 rgba(240, 228, 0, 0); } 50% { opacity: 1; text-shadow: 0 0 8px rgba(240, 228, 0, 0.6); } 100% { opacity: 0.6; text-shadow: 0 0 0 rgba(240, 228, 0, 0); } }
-    @keyframes fadeIn { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
-
-    /* Mobile 专用样式修改 (Layered Logic) */
-    @media (max-width: 768px) {
-      /* body和html已设置为fixed，这里不需要额外height */
-      
-      /* 地图层 (Layer 2) - 永远全屏垫底 */
-      .map-container { 
-        position: absolute; 
-        top: 0; 
-        left: 0; 
-        width: 100%; 
-        height: 100%; 
-        z-index: 0; 
-      }
-      
-      /* 信息层 (Layer 1) - 浮在地图之上 */
-      .sidebar { 
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%; 
-        max-height: 100%; 
-        z-index: 1000;
-        transition: height 0.3s ease;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-      }
-
-      /* 状态 1 Full: Sidebar 占满整个屏幕 */
-      .sidebar.mobile-full {
-          height: 100%; 
-          background-color: var(--bg-sidebar);
-      }
-
-      /* 状态 2/3: Sidebar 自动高度 */
-      .sidebar.mobile-auto {
-          height: auto;
-      }
+    /* Settings Modal */
+    .settings-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      z-index: 5000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      padding: 20px;
     }
+    .settings-modal {
+      background-color: var(--bg-modal);
+      width: 100%;
+      max-width: 400px;
+      max-height: 80vh;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      overflow: hidden;
+    }
+    .settings-header {
+      padding: 15px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .settings-close { background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; }
+    .settings-close:hover { color: var(--text-main); }
+    
+    .settings-content { padding: 15px; overflow-y: auto; }
+    
+    .settings-section { margin-bottom: 20px; }
+    .settings-section-title { font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 10px; font-weight: 700; }
+    
+    .settings-actions-row { display: flex; gap: 10px; margin-bottom: 15px; }
+    .settings-action-btn { flex: 1; padding: 10px; border-radius: 6px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; }
+    .settings-action-btn:hover { background-color: var(--hover-bg); border-color: var(--bvg-yellow); }
+
+    .line-filter-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+    .line-toggle { 
+       background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); 
+       padding: 5px; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: center; 
+       display: flex; align-items: center; justify-content: center; gap: 4px; 
+       font-family: var(--font-numbers); font-weight: bold;
+    }
+    .line-toggle.active { background-color: var(--bg-card); color: var(--text-main); border-color: #666; }
+    .line-toggle.hidden-line { opacity: 0.5; text-decoration: line-through; }
+    .line-toggle i { font-size: 10px; }
+
+    /* Fix station name color in dashboard */
+    .station-info-label { color: var(--text-main) !important; font-weight: 600; }
+    .station-pill-static { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background-color: var(--bg-input); border-radius: 6px; border: 1px solid var(--border-color); height: 36px; }
+
   </style>
 </head>
 <body>
   <div id="app">
+    <!-- Settings Modal -->
+    <div class="settings-modal-overlay" v-if="showSettings" @click.self="showSettings = false">
+        <div class="settings-modal">
+            <div class="settings-header">
+                <span>Einstellungen</span>
+                <button class="settings-close" @click="showSettings = false"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="settings-content">
+                <!-- Section 0: Global Actions & Time -->
+                <div class="settings-section">
+                    <div class="settings-section-title">Anzeige & Sprache</div>
+                    <div class="settings-actions-row">
+                         <button class="settings-action-btn" @click="toggleTheme">
+                            <i class="fas" :class="isDarkMode ? 'fa-moon' : 'fa-sun'"></i>
+                            {{ isDarkMode ? 'Dunkel' : 'Hell' }}
+                         </button>
+                         <button class="settings-action-btn">
+                            <i class="fas fa-globe"></i> Deutsch
+                         </button>
+                    </div>
+                    
+                    <!-- Time Filter (Slider) -->
+                    <div class="mt-3">
+                        <div class="settings-section-title d-flex justify-content-between">
+                            <span>Zeitraum</span>
+                            <span style="color: var(--text-main)">{{ duration }} Min</span>
+                        </div>
+                        <input type="range" v-model.number="duration" min="5" max="120" step="5" @change="onDurationChange">
+                    </div>
+                </div>
+
+                <!-- Section 1: Manage Stations (2 Slots) -->
+                <div class="settings-section">
+                    <div class="settings-section-title">Stationen verwalten</div>
+                    
+                    <!-- Slot 1 -->
+                    <div class="mb-2">
+                        <div v-if="station1" class="station-pill-static">
+                            <span class="text-truncate me-2">{{ cleanName(station1.name) }}</span>
+                            <i class="fas fa-times station-remove" @click="clearStation(1)"></i>
+                        </div>
+                        <div v-else class="search-input-wrapper">
+                            <input 
+                                class="form-control-dark" 
+                                type="text" 
+                                placeholder="Station 1..." 
+                                v-model="s1Query" 
+                                @input="onS1Input"
+                            >
+                            <div v-if="s1Results.length > 0" class="search-dropdown">
+                                <div class="search-item" v-for="s in s1Results" :key="s.id" @click="setStation(1, s)">
+                                     {{ cleanName(s.name) }} <i class="fas fa-plus text-muted"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slot 2 -->
+                    <div class="mb-2">
+                        <div v-if="station2" class="station-pill-static">
+                            <span class="text-truncate me-2">{{ cleanName(station2.name) }}</span>
+                            <i class="fas fa-times station-remove" @click="clearStation(2)"></i>
+                        </div>
+                        <div v-else class="search-input-wrapper">
+                            <input 
+                                class="form-control-dark" 
+                                type="text" 
+                                placeholder="Station 2..." 
+                                v-model="s2Query" 
+                                @input="onS2Input"
+                            >
+                            <div v-if="s2Results.length > 0" class="search-dropdown">
+                                <div class="search-item" v-for="s in s2Results" :key="s.id" @click="setStation(2, s)">
+                                     {{ cleanName(s.name) }} <i class="fas fa-plus text-muted"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Line Filter -->
+                <div class="settings-section">
+                    <div class="settings-section-title d-flex justify-content-between align-items-center">
+                        <span>Linienfilter</span>
+                        <!-- New Reset Button -->
+                        <button class="btn btn-sm btn-outline-secondary" style="font-size: 10px; padding: 2px 6px;" @click="resetLineFilters" v-if="excludedLines.size > 0">Reset</button>
+                    </div>
+                    <div class="search-input-wrapper">
+                         <input class="form-control-dark" type="text" placeholder="Filter Lines (e.g. M41)..." v-model="lineFilterSearch">
+                    </div>
+                    <div class="line-filter-list">
+                        <div 
+                          v-for="lineName in filteredLineList" 
+                          :key="lineName" 
+                          class="line-toggle" 
+                          :class="{ 'active': !excludedLines.has(lineName), 'hidden-line': excludedLines.has(lineName) }"
+                          @click="toggleLineExclusion(lineName)"
+                        >
+                             {{ lineName }}
+                             <i class="fas" :class="excludedLines.has(lineName) ? 'fa-eye-slash' : 'fa-eye'"></i>
+                        </div>
+                    </div>
+                    <div v-if="filteredLineList.length === 0" class="text-muted small text-center mt-2">
+                        Keine passenden Linien gefunden.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 左侧 Sidebar -->
     <div class="sidebar" :class="sidebarMobileClass">
-      <!-- 1. 顶部 Time Section -->
-      <div class="section-time">
-        <!-- 中间：时间/标题切换 -->
-        <div class="header-center-display" 
-             :class="{ 'is-time': !showTitle }" 
-             @click="toggleHeaderDisplay"
-             title="Umschalten">
-             {{ headerText }}
-        </div>
-
-        <div class="header-actions">
-             <button class="header-btn" @click="toggleTheme" :title="isDarkMode ? 'Helles Design' : 'Dunkles Design'">
-                <i class="fas" :class="isDarkMode ? 'fa-moon' : 'fa-sun'"></i>
-             </button>
-             <button class="header-btn" title="Sprache"><i class="fas fa-globe"></i></button>
-        </div>
-      </div>
-
+      
       <div class="section-search">
-        <div class="search-input-wrapper">
-          <input
-            class="form-control-dark"
-            type="text"
-            placeholder="Haltestelle suchen..."
-            v-model="searchQuery"
-            @input="onSearchInput"
-            @focus="showFavorites"
-          />
-          <button v-if="searchQuery" @click="clearSearch" class="input-action-btn clear-btn">
-            <i class="fas fa-times"></i>
-          </button>
+        <div class="main-search-row">
+            <div class="search-input-wrapper">
+              <input
+                class="form-control-dark"
+                type="text"
+                placeholder="Haltestelle suchen..."
+                v-model="searchQuery"
+                @input="onSearchInput"
+                @focus="showFavorites"
+              />
+              <button v-if="searchQuery" @click="clearSearch" class="input-action-btn clear-btn">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
         </div>
 
         <div class="filter-toolbar">
@@ -699,13 +800,9 @@
             <button class="type-btn btn-fern" :class="{ active: isTypeActive('express') }" @click="toggleType('express')">Fern</button>
           </div>
 
-          <select v-model="duration" @change="onDurationChange" class="duration-select">
-            <option :value="5">5 Min</option>
-            <option :value="15">15 Min</option>
-            <option :value="30">30 Min</option>
-            <option :value="60">60 Min</option>
-            <option :value="120">120 Min</option>
-          </select>
+          <button class="settings-btn" @click="showSettings = true" title="Mehr Einstellungen">
+              <i class="fas fa-sliders-h"></i>
+          </button>
         </div>
 
         <div class="search-dropdown" v-if="displayResults.length > 0">
@@ -738,14 +835,14 @@
           <div class="mt-2 small" style="color: var(--text-muted)">Lade Abfahrten...</div>
         </div>
 
-        <div v-else-if="departures.length === 0 && !loading && currentStation" class="text-center py-4 text-muted">
+        <div v-else-if="departures.length === 0 && !loading && watchedStations.length > 0" class="text-center py-4 text-muted">
            <small>Keine Abfahrten in den nächsten {{duration}} Min.</small>
         </div>
 
         <div
           class="bus-card"
           v-for="dep in departures"
-          :key="dep.tripId"
+          :key="dep.uniqueId"
           :class="[
             getProductClass(dep.line.product), 
             { 'departed': isDeparted(dep) && !dep.cancelled },
@@ -757,6 +854,10 @@
               <div class="d-flex align-items-center"> 
                 <span class="line-badge">{{ dep.line.name }}</span>
                 <div class="dest-text" :title="cleanName(dep.direction)">{{ cleanName(dep.direction) }}</div>
+              </div>
+              <!-- Optional: Show origin station if multiple stations are watched -->
+              <div v-if="watchedStations.length > 1" class="station-info-label" style="font-size: 10px; margin-top: 2px;">
+                 <i class="fas fa-map-pin me-1"></i>{{ cleanName(dep.stationName) }}
               </div>
             </div>
 
@@ -824,14 +925,38 @@
       setup() {
         const currentTime = ref("");
         const now = ref(new Date());
+        
+        // Main Sidebar Search
         const searchQuery = ref("");
         const searchResults = ref([]);
+        
+        // --- Station Slot Refs ---
+        const station1 = ref(null);
+        const station2 = ref(null);
+        const s1Query = ref("");
+        const s2Query = ref("");
+        const s1Results = ref([]);
+        const s2Results = ref([]);
+        
+        // Computed watchedStations from the two slots
+        const watchedStations = computed(() => {
+            const list = [];
+            if (station1.value) list.push(station1.value);
+            if (station2.value) list.push(station2.value);
+            return list;
+        });
+
         const starredStations = ref([]); 
         const isShowingFavorites = ref(false); 
         const isDarkMode = ref(true); 
+        const showSettings = ref(false);
         
-        const currentStation = ref(null);
         const departuresRaw = ref([]);
+        
+        // Line Filters
+        const lineFilterSearch = ref("");
+        const excludedLines = ref(new Set()); 
+
         const loading = ref(false);
         const activeFilters = ref(['suburban', 'subway', 'tram', 'bus', 'regional', 'express']);
         const duration = ref(30);
@@ -844,18 +969,14 @@
         const isRadarActive = ref(false);
         const radarError = ref(false);
 
-        // State for Info Area: 2 = Full, 1 = Half, 0 = Collapsed
+        // State for Info Area
         const infoState = ref(2);
-
-        // Toggle Title/Time
-        const showTitle = ref(true); // 默认显示标题
-        const toggleHeaderDisplay = () => { showTitle.value = !showTitle.value; };
-        // 更改了默认文字
-        const headerText = computed(() => showTitle.value ? "AbfahrtsMonitor" : currentTime.value);
 
         const lastRadarData = ref([]);
 
-        let map, stationMarker, stationCircle, baseLayer;
+        let map, baseLayer;
+        let stationMarkers = []; // Array of markers
+        let stationCircles = []; // Array of circles
         let vehicleLayer; 
         let vehicleMarkers = {}; 
         let vehicleTrails = {}; 
@@ -884,19 +1005,10 @@
           isDarkMode.value = !isDarkMode.value;
         };
         
-        // 3-State Toggle Logic
-        // 2: Full -> 0: Collapsed -> 1: Half -> 2: Full
         const toggleInfoState = () => {
-            if (infoState.value === 2) {
-                // Full -> Collapsed (Big drop)
-                infoState.value = 0;
-            } else if (infoState.value === 0) {
-                // Collapsed -> Half (Small step up)
-                infoState.value = 1;
-            } else {
-                // Half -> Full (Step up to full)
-                infoState.value = 2;
-            }
+            if (infoState.value === 2) { infoState.value = 0; } 
+            else if (infoState.value === 0) { infoState.value = 1; } 
+            else { infoState.value = 2; }
         };
 
         const infoStateClass = computed(() => {
@@ -911,8 +1023,8 @@
         });
 
         const toggleIcon = computed(() => {
-            if (infoState.value === 2) return 'fa-angles-up'; // Full -> Double Up (to collapse)
-            return 'fa-chevron-down'; // Half or Collapsed -> Down (to expand)
+            if (infoState.value === 2) return 'fa-angles-up'; 
+            return 'fa-chevron-down'; 
         });
 
         const zoomIn = () => { if (map) map.zoomIn(); };
@@ -928,26 +1040,9 @@
           }
         });
 
-        watch([isRadarActive, radarError], () => {
-            updateStationMarkerTooltip();
-        });
-
-        const updateStationMarkerTooltip = () => {
-            if (!stationMarker || !currentStation.value) return;
-
-            const name = cleanName(currentStation.value.name);
-            let iconHtml = '';
-
-            if (radarError.value) {
-                iconHtml = '<i class="fas fa-rss map-radar-icon error"></i>';
-            } else if (isRadarActive.value) {
-                iconHtml = '<i class="fas fa-rss map-radar-icon active"></i>';
-            } else {
-                 iconHtml = '<i class="fas fa-rss map-radar-icon inactive" style="display:none"></i>';
-            }
-            
-            stationMarker.setTooltipContent(`<div>${name} ${iconHtml}</div>`);
-        };
+        // -------------------------
+        // Map Logic
+        // -------------------------
 
         onMounted(() => {
           map = L.map("map", { zoomControl: false }).setView([52.5200, 13.4050], 13);
@@ -959,25 +1054,18 @@
           vehicleLayer = L.layerGroup().addTo(map);
 
           map.on('zoomstart', () => {
-              document.querySelectorAll('.leaflet-marker-icon').forEach(el => {
-                  el.classList.add('no-transition');
-              });
+              document.querySelectorAll('.leaflet-marker-icon').forEach(el => { el.classList.add('no-transition'); });
           });
-          
           map.on('zoomend', () => {
               setTimeout(() => {
-                  document.querySelectorAll('.leaflet-marker-icon').forEach(el => {
-                      el.classList.remove('no-transition');
-                  });
+                  document.querySelectorAll('.leaflet-marker-icon').forEach(el => { el.classList.remove('no-transition'); });
               }, 100);
           });
 
           setInterval(() => { now.value = new Date(); currentTime.value = now.value.toLocaleTimeString("de-DE"); }, 1000);
 
           const saved = localStorage.getItem('bvg_fav_stations');
-          if (saved) {
-            starredStations.value = JSON.parse(saved);
-          }
+          if (saved) { starredStations.value = JSON.parse(saved); }
         });
 
         onUnmounted(() => {
@@ -989,8 +1077,10 @@
             return name.replace(/\s*\(Berlin\)\s*/gi, "").replace(/,\s*Berlin\s*/gi, "");
         };
 
+        // -------------------------
+        // Favorites
+        // -------------------------
         const isStarred = (id) => starredStations.value.some(s => s.id === id);
-        
         const toggleStar = (station) => {
           if (isStarred(station.id)) {
             starredStations.value = starredStations.value.filter(s => s.id !== station.id);
@@ -1012,23 +1102,151 @@
           }
         };
 
+        // -------------------------
+        // Search Logic (Main & Slots)
+        // -------------------------
+
         const displayResults = computed(() => {
-          if (searchQuery.value && searchResults.value.length > 0) {
-            return searchResults.value; 
-          } else if (!searchQuery.value && starredStations.value.length > 0) {
-            return starredStations.value; 
-          }
+          if (searchQuery.value && searchResults.value.length > 0) { return searchResults.value; } 
+          else if (!searchQuery.value && starredStations.value.length > 0) { return starredStations.value; }
           return [];
         });
 
         watch(searchQuery, (newVal) => {
-          if (!newVal) {
-            isShowingFavorites.value = true;
-          } else {
-            isShowingFavorites.value = false;
-          }
+          if (!newVal) { isShowingFavorites.value = true; } 
+          else { isShowingFavorites.value = false; }
         });
 
+        const onSearchInput = () => {
+             handleSearch(searchQuery, searchResults, searchAbortController);
+        };
+        
+        // Slot 1
+        const onS1Input = () => handleSearch(s1Query, s1Results, { value: null });
+        // Slot 2
+        const onS2Input = () => handleSearch(s2Query, s2Results, { value: null });
+
+        const handleSearch = (queryRef, resultsRef, abortRef) => {
+          if (searchTimeout) clearTimeout(searchTimeout);
+          if (abortRef.value) { abortRef.value.abort(); }
+
+          searchTimeout = setTimeout(async () => {
+            if (!queryRef.value) {
+              resultsRef.value = [];
+              return;
+            }
+
+            const controller = new AbortController();
+            if(abortRef) abortRef.value = controller;
+
+            try {
+              const res = await axios.get(`${API_BASE}/locations`, { 
+                params: { query: queryRef.value, results: 6, stops: true },
+                signal: controller.signal 
+              });
+              resultsRef.value = res.data.filter(s => s.type === 'stop');
+            } catch (e) {
+              if (axios.isCancel(e)) return; 
+              console.error(e);
+            }
+          }, 300);
+        };
+
+        // -------------------------
+        // Selection Logic (Main & Slots)
+        // -------------------------
+
+        // Main Sidebar: Sets Station 1, clears Station 2
+        const selectStation = (station) => {
+          station1.value = station;
+          station2.value = null;
+          
+          searchQuery.value = cleanName(station.name); 
+          searchResults.value = [];
+          
+          if (infoState.value === 0) { infoState.value = 2; }
+          
+          updateMapForStations();
+          fetchDepartures();
+        };
+
+        const setStation = (slot, station) => {
+            if (slot === 1) {
+                station1.value = station;
+                s1Query.value = "";
+                s1Results.value = [];
+            } else {
+                station2.value = station;
+                s2Query.value = "";
+                s2Results.value = [];
+            }
+            updateMapForStations();
+            fetchDepartures();
+        };
+
+        const clearStation = (slot) => {
+            if (slot === 1) station1.value = null;
+            else station2.value = null;
+            updateMapForStations();
+            fetchDepartures();
+        };
+
+        const updateMapForStations = () => {
+            stationMarkers.forEach(m => map.removeLayer(m));
+            stationCircles.forEach(c => map.removeLayer(c));
+            stationMarkers = [];
+            stationCircles = [];
+            
+            if (watchedStations.value.length === 0) return;
+
+            const bounds = L.latLngBounds();
+
+            watchedStations.value.forEach(station => {
+                if (station.location) {
+                    const lat = station.location.latitude;
+                    const lon = station.location.longitude;
+                    bounds.extend([lat, lon]);
+
+                    const stationIcon = L.divIcon({
+                        className: 'station-pos-marker', 
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10], 
+                        popupAnchor: [0, -10]
+                    });
+
+                    const marker = L.marker([lat, lon], { icon: stationIcon })
+                        .addTo(map)
+                        .bindTooltip(`<div>${cleanName(station.name)}</div>`, {
+                            permanent: true, direction: 'top', offset: [0, -14], className: 'station-tooltip' 
+                        });
+                    
+                    stationMarkers.push(marker);
+
+                    const circle = L.circle([lat, lon], {
+                        color: '#F0E400', fillColor: '#F0E400', fillOpacity: 0.08, radius: 2000, weight: 2, dashArray: '5, 10'
+                    }).addTo(map);
+                    stationCircles.push(circle);
+                }
+            });
+
+            if (watchedStations.value.length === 1) {
+                 const s = watchedStations.value[0];
+                 if(s.location) map.setView([s.location.latitude, s.location.longitude], 14);
+            } else {
+                 map.fitBounds(bounds, { padding: [50, 50] });
+            }
+
+            if (radarInterval) clearInterval(radarInterval);
+            
+            for (let id in vehicleMarkers) { map.removeLayer(vehicleMarkers[id]); }
+            for (let id in vehicleTrails) { map.removeLayer(vehicleTrails[id]); }
+            vehicleMarkers = {};
+            vehicleTrails = {};
+            lastRadarData.value = [];
+            
+            isRadarActive.value = false;
+        };
+        
         const focusVehicle = (tripId) => {
              const marker = vehicleMarkers[tripId];
              if (marker) {
@@ -1063,155 +1281,76 @@
 
         const visibleStopovers = computed(() => currentTripStopovers.value.slice(0, stopoverLimit.value));
 
-        const onSearchInput = () => {
-          if (searchTimeout) clearTimeout(searchTimeout);
-          
-          if (searchAbortController.value) {
-            searchAbortController.value.abort();
-          }
+        // -------------------------
+        // Data Fetching
+        // -------------------------
 
-          searchTimeout = setTimeout(async () => {
-            if (!searchQuery.value) {
-              searchResults.value = [];
-              isShowingFavorites.value = true;
+        const fetchDepartures = async () => {
+          if (watchedStations.value.length === 0) {
+              departuresRaw.value = [];
               return;
-            }
-
-            searchAbortController.value = new AbortController();
-
-            try {
-              const res = await axios.get(`${API_BASE}/locations`, { 
-                params: { query: searchQuery.value, results: 6, stops: true },
-                signal: searchAbortController.value.signal 
-              });
-              searchResults.value = res.data.filter(s => s.type === 'stop');
-            } catch (e) {
-              if (axios.isCancel(e)) return; 
-              console.error(e);
-            }
-          }, 300);
-        };
-
-        const selectStation = (station) => {
-          currentStation.value = station;
-          searchResults.value = []; 
-          searchQuery.value = cleanName(station.name); 
-          
-          // 如果列表是全收起状态，选中站点时自动切到 Full
-          if (infoState.value === 0) {
-              infoState.value = 2;
           }
 
-          if (radarInterval) clearInterval(radarInterval);
-          
-          for (let id in vehicleMarkers) { map.removeLayer(vehicleMarkers[id]); }
-          for (let id in vehicleTrails) { map.removeLayer(vehicleTrails[id]); }
-          vehicleMarkers = {};
-          vehicleTrails = {};
-          lastRadarData.value = [];
-          
-          isRadarActive.value = false;
-          radarError.value = false;
-
-          if (station.location) {
-            const lat = station.location.latitude;
-            const lon = station.location.longitude;
-
-            if (stationMarker) map.removeLayer(stationMarker);
-            if (stationCircle) map.removeLayer(stationCircle);
-
-            map.setView([lat, lon], 14); 
-
-            const stationIcon = L.divIcon({
-              className: 'station-pos-marker', 
-              iconSize: [20, 20],
-              iconAnchor: [10, 10], 
-              popupAnchor: [0, -10]
-            });
-
-            stationMarker = L.marker([lat, lon], { icon: stationIcon })
-              .addTo(map)
-              .bindTooltip("", {
-                permanent: true,       
-                direction: 'top',      
-                offset: [0, -14],  
-                className: 'station-tooltip' 
-              })
-              .openTooltip();
-            
-            updateStationMarkerTooltip();
-
-            stationCircle = L.circle([lat, lon], {
-              color: '#F0E400',       
-              fillColor: '#F0E400',   
-              fillOpacity: 0.08,      
-              radius: 2000,           
-              weight: 2,              
-              dashArray: '5, 10'      
-            }).addTo(map);
-          }
-          fetchDepartures(station.id);
-        };
-
-        const fetchDepartures = async (id) => {
           loading.value = true;
           try {
-            const res = await axios.get(`${API_BASE}/stops/${id}/departures`, { params: { duration: duration.value, results: 200 } });
-            departuresRaw.value = res.data.departures || [];
+            const promises = watchedStations.value.map(station => 
+                axios.get(`${API_BASE}/stops/${station.id}/departures`, { 
+                    params: { duration: duration.value, results: 50 } 
+                }).then(res => {
+                    const deps = res.data.departures || [];
+                    return deps.map(d => ({...d, stationName: station.name, uniqueId: d.tripId + '_' + station.id}));
+                })
+            );
+
+            const results = await Promise.all(promises);
+            const allDeps = results.flat();
+            departuresRaw.value = allDeps;
+            
             startRadarLoop();
-          } catch (e) { departuresRaw.value = []; } finally { loading.value = false; }
+          } catch (e) { 
+              console.error(e);
+              departuresRaw.value = []; 
+          } finally { 
+              loading.value = false; 
+          }
         };
 
         const getBoundingBox = (lat, lon, radiusKm) => {
             const latDelta = radiusKm / 111; 
             const lonDelta = radiusKm / (111 * Math.cos(lat * (Math.PI / 180)));
-            return {
-                north: lat + latDelta,
-                south: lat - latDelta,
-                east: lon + lonDelta,
-                west: lon - lonDelta
-            };
+            return { north: lat + latDelta, south: lat - latDelta, east: lon + lonDelta, west: lon - lonDelta };
         };
         
         const fetchRadar = async () => {
-            if (!currentStation.value || !currentStation.value.location) return;
+            if (watchedStations.value.length === 0) return;
+            const centerStation = watchedStations.value[watchedStations.value.length - 1]; 
             
-            const { latitude, longitude } = currentStation.value.location;
+            if (!centerStation.location) return;
+            
+            const { latitude, longitude } = centerStation.location;
             const bbox = getBoundingBox(latitude, longitude, 2.0);
 
-            if (radarAbortController) {
-                radarAbortController.abort();
-            }
+            if (radarAbortController) { radarAbortController.abort(); }
             radarAbortController = new AbortController();
 
             try {
                 const res = await axios.get(`${API_BASE}/radar`, {
                     params: {
-                        north: bbox.north,
-                        west: bbox.west,
-                        south: bbox.south,
-                        east: bbox.east,
-                        results: 256,
-                        duration: 60,
-                        frames: 3,
-                        polylines: true 
+                        north: bbox.north, west: bbox.west, south: bbox.south, east: bbox.east,
+                        results: 256, duration: 60, frames: 3, polylines: true 
                     },
                     signal: radarAbortController.signal
                 });
                 
                 const allVehicles = Array.isArray(res.data) ? res.data : (res.data.movements || []);
-                
                 isRadarActive.value = true;
                 radarError.value = false;
-
                 if (!Array.isArray(allVehicles)) return; 
-                
                 lastRadarData.value = allVehicles;
                 updateVehicleMarkers(allVehicles);
-
             } catch (e) {
                 if (axios.isCancel(e)) return; 
-                console.warn("Radar update skipped (network/rate limit)"); 
+                console.warn("Radar skipped"); 
                 isRadarActive.value = false;
                 radarError.value = true;
             }
@@ -1220,16 +1359,11 @@
         const updateVehicleMarkers = (vehicles) => {
             const activeIds = new Set();
             const validTripIds = new Set(departures.value.map(d => d.tripId));
-            
-            // 地图显示白名单： explicitly include regional/ferry but exclude express (Fern)
             const isMapRelevant = (prod) => ['bus', 'tram', 'suburban', 'subway', 'regional', 'ferry'].includes(prod);
 
             vehicles.forEach(v => {
                 if (!v.location || !v.line) return;
-                
-                if (!validTripIds.has(v.tripId)) return;
-
-                // 显式过滤：如果不是地图相关类型（例如是express），则不显示
+                if (!validTripIds.has(v.tripId)) return; 
                 if (!isMapRelevant(v.line.product)) return;
 
                 const tripId = v.tripId;
@@ -1241,77 +1375,40 @@
                 const color = productColors[prod] || productColors.default;
                 
                 let polylinePoints = [];
-                
                 if (v.frames && Array.isArray(v.frames)) {
-                    const validFrames = v.frames.filter(f => 
-                        f && typeof f.latitude === 'number' && typeof f.longitude === 'number'
-                    );
+                    const validFrames = v.frames.filter(f => f && typeof f.latitude === 'number' && typeof f.longitude === 'number');
                     polylinePoints = validFrames.map(f => [f.latitude, f.longitude]);
                 }
 
-                if (vehicleTrails[tripId]) {
-                    map.removeLayer(vehicleTrails[tripId]);
-                }
+                if (vehicleTrails[tripId]) { map.removeLayer(vehicleTrails[tripId]); }
                 if (polylinePoints.length > 1) {
                     vehicleTrails[tripId] = L.polyline(polylinePoints, {
-                        color: color,
-                        weight: 3,
-                        opacity: 0.6,
-                        dashArray: '3, 6'
+                        color: color, weight: 3, opacity: 0.6, dashArray: '3, 6'
                     }).addTo(map);
                 }
 
-                // Popup badge content now uses a class for font styling
                 const badgeStyle = `background-color: ${color}; color: white; padding: 2px 6px; border-radius: 4px; display: inline-block; line-height: 1.2; font-weight: 800;`;
                 const popupContent = `<div style="display: flex; align-items: center; gap: 8px;"><span class="vehicle-popup-badge" style="${badgeStyle}">${v.line.name}</span> <span>${cleanName(v.direction)}</span></div>`;
 
                 if (vehicleMarkers[tripId]) {
                     const marker = vehicleMarkers[tripId];
                     const newLatLng = L.latLng(v.location.latitude, v.location.longitude);
-                    
-                    if (marker.getLatLng().distanceTo(newLatLng) > 1) {
-                         marker.setLatLng(newLatLng);
-                    }
-                    
+                    if (marker.getLatLng().distanceTo(newLatLng) > 1) { marker.setLatLng(newLatLng); }
                     marker.setPopupContent(popupContent);
-
                 } else {
-                    const html = `
-                      <div class="vehicle-marker-wrapper">
-                        <div class="vehicle-marker ${productClass}">
-                            ${label}
-                        </div>
-                      </div>
-                    `;
-
-                    const icon = L.divIcon({
-                        className: 'smooth-transition',
-                        html: html,
-                        iconSize: [36, 36],
-                        iconAnchor: [18, 18],
-                        popupAnchor: [0, -18]
-                    });
-
+                    const html = `<div class="vehicle-marker-wrapper"><div class="vehicle-marker ${productClass}">${label}</div></div>`;
+                    const icon = L.divIcon({ className: 'smooth-transition', html: html, iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -18] });
                     const marker = L.marker([v.location.latitude, v.location.longitude], { icon: icon })
                      .addTo(map)
-                     .bindPopup(popupContent, {
-                        className: 'vehicle-popup', 
-                        offset: [0, -2], 
-                        closeButton: false 
-                     });
-
+                     .bindPopup(popupContent, { className: 'vehicle-popup', offset: [0, -2], closeButton: false });
                     vehicleMarkers[tripId] = marker;
                 }
             });
 
             for (let id in vehicleMarkers) {
                 if (!activeIds.has(id)) {
-                    map.removeLayer(vehicleMarkers[id]);
-                    delete vehicleMarkers[id];
-                    if (vehicleTrails[id]) {
-                        map.removeLayer(vehicleTrails[id]);
-                        delete vehicleTrails[id];
-                    }
+                    map.removeLayer(vehicleMarkers[id]); delete vehicleMarkers[id];
+                    if (vehicleTrails[id]) { map.removeLayer(vehicleTrails[id]); delete vehicleTrails[id]; }
                 }
             }
         };
@@ -1322,11 +1419,19 @@
             radarInterval = setInterval(fetchRadar, 10000); 
         };
 
+        // -------------------------
+        // Computed Departures
+        // -------------------------
         const departures = computed(() => {
           return departuresRaw.value
             .filter(d => {
               const p = d.line.product;
               return activeFilters.value.includes(p);
+            })
+            // Line Filter Logic
+            .filter(d => {
+                if (excludedLines.value.has(d.line.name)) return false;
+                return true;
             })
             .filter(d => {
                const time = d.when || d.plannedWhen;
@@ -1337,23 +1442,59 @@
 
         watch(departures, (newDeps) => {
             const currentTripIds = new Set(newDeps.map(d => d.tripId));
-            
             for (let id in vehicleMarkers) {
                 if (!currentTripIds.has(id)) {
-                    map.removeLayer(vehicleMarkers[id]);
-                    delete vehicleMarkers[id];
-                    if (vehicleTrails[id]) {
-                        map.removeLayer(vehicleTrails[id]);
-                        delete vehicleTrails[id];
-                    }
+                    map.removeLayer(vehicleMarkers[id]); delete vehicleMarkers[id];
+                    if (vehicleTrails[id]) { map.removeLayer(vehicleTrails[id]); delete vehicleTrails[id]; }
                 }
             }
-            
-            if (lastRadarData.value.length > 0) {
-                 updateVehicleMarkers(lastRadarData.value);
-            }
+            if (lastRadarData.value.length > 0) { updateVehicleMarkers(lastRadarData.value); }
         }, { deep: true });
 
+        // -------------------------
+        // Line Filter UI Helpers
+        // -------------------------
+        // Get unique lines from current raw data (before filtering) so users can toggle them
+        const uniqueLinesList = computed(() => {
+            const lines = new Set();
+            departuresRaw.value.forEach(d => {
+                if (d.line && d.line.name) {
+                    // NEW: Filter by currently active product types (e.g. if Bus is off, don't show Bus lines)
+                    if (!activeFilters.value.includes(d.line.product)) return;
+                    
+                    // EXCLUDE Fern lines from the generated list
+                    if (d.line.product === 'express') return;
+                    
+                    lines.add(d.line.name);
+                }
+            });
+            // Also include currently excluded lines so they don't disappear from the list
+            excludedLines.value.forEach(l => lines.add(l));
+            
+            return Array.from(lines).sort();
+        });
+
+        const filteredLineList = computed(() => {
+            if (!lineFilterSearch.value) return uniqueLinesList.value;
+            const lower = lineFilterSearch.value.toLowerCase();
+            return uniqueLinesList.value.filter(l => l.toLowerCase().includes(lower));
+        });
+
+        const toggleLineExclusion = (lineName) => {
+            if (excludedLines.value.has(lineName)) {
+                excludedLines.value.delete(lineName);
+            } else {
+                excludedLines.value.add(lineName);
+            }
+        };
+
+        const resetLineFilters = () => {
+            excludedLines.value.clear();
+        };
+
+        // -------------------------
+        // Misc Helpers
+        // -------------------------
         const isDeparted = (dep) => (new Date(dep.when || dep.plannedWhen) - now.value) <= 0;
         const getDelayClass = (d) => {
             if (d.cancelled) return "status-cancel";
@@ -1377,25 +1518,37 @@
           isShowingFavorites.value = true;
           if (radarInterval) clearInterval(radarInterval);
           
+          station1.value = null;
+          station2.value = null;
+          
           for (let id in vehicleMarkers) { map.removeLayer(vehicleMarkers[id]); }
           for (let id in vehicleTrails) { map.removeLayer(vehicleTrails[id]); }
           vehicleMarkers = {};
           vehicleTrails = {};
           lastRadarData.value = [];
+          
+          stationMarkers.forEach(m => map.removeLayer(m));
+          stationMarkers = [];
+          stationCircles.forEach(c => map.removeLayer(c));
+          stationCircles = [];
 
           isRadarActive.value = false;
         };
 
         return {
-          currentTime, searchQuery, searchResults, departures, loading, duration, currentStation,
+          currentTime, searchQuery, searchResults, departures, loading, duration, 
           isTypeActive, toggleType, selectStation, onSearchInput, clearSearch,
           formatTime, formatAbsTime, getDelayClass, isDeparted, getProductClass: (p) => `product-${p}`,
-          onDurationChange: () => fetchDepartures(currentStation.value.id), expandedTripId, toggleTrip, isTripLoading,
+          onDurationChange: () => fetchDepartures(), expandedTripId, toggleTrip, isTripLoading,
           currentTripStopovers, visibleStopovers, stopoverLimit,
           starredStations, isStarred, toggleStar, displayResults, isShowingFavorites, showFavorites, isRadarActive, radarError, cleanName,
           isDarkMode, toggleTheme, zoomIn, zoomOut,
           infoState, toggleInfoState, infoStateClass, sidebarMobileClass, toggleIcon,
-          showTitle, toggleHeaderDisplay, headerText
+          // New
+          showSettings, setStation, clearStation, watchedStations,
+          lineFilterSearch, filteredLineList, toggleLineExclusion, excludedLines, resetLineFilters,
+          // Slots
+          station1, station2, s1Query, s2Query, s1Results, s2Results, onS1Input, onS2Input
         };
       }
     }).mount("#app");
