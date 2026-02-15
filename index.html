@@ -101,7 +101,7 @@
       position: relative; 
     }
 
-    /* Left Sidebar - PC Defaults */
+    /* Left Sidebar - PC/Tablet/Landscape Defaults */
     .sidebar {
       width: 380px;
       min-width: 320px;
@@ -121,7 +121,7 @@
         border-right: none;
     }
 
-    /* Right Map Container - PC Defaults */
+    /* Right Map Container - PC/Tablet/Landscape Defaults */
     .map-container {
       flex-grow: 1;
       height: 100%;
@@ -130,8 +130,9 @@
       transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
-    /* --- MOBILE OPTIMIZATIONS (Bottom Sheet Mode) --- */
-    @media (max-width: 767px) {
+    /* --- MOBILE PORTRAIT OPTIMIZATIONS (Top Sheet Mode) --- */
+    /* 关键修改：增加了 and (orientation: portrait) 确保横屏时不生效 */
+    @media (max-width: 767px) and (orientation: portrait) {
         #app {
             flex-direction: column;
         }
@@ -146,20 +147,27 @@
             z-index: 1; /* Behind sidebar */
         }
 
-        /* Sidebar becomes a bottom sheet */
+        /* Sidebar becomes a TOP sheet */
         .sidebar {
             position: absolute;
-            bottom: 0;
+            top: 0; /* Anchored to Top */
             left: 0;
-            width: 100% !important; /* Fix: Top right to edge */
-            height: auto !important; /* Height depends on content/state */
-            max-height: 85vh; /* Never fully cover map */
+            width: 100% !important; 
+            height: auto !important; 
+            max-height: 85vh; 
             border-right: none;
-            border-top: 1px solid var(--border-color);
-            z-index: 2000; /* Above map */
-            border-radius: 16px 16px 0 0; /* Rounded top corners */
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border-bottom: 1px solid var(--border-color); /* Separator at bottom */
+            z-index: 2000; 
+            border-radius: 0 0 16px 16px; /* Rounded bottom corners */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); /* Shadow downwards */
+            transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        /* Sidebar footer toggle: Ensure it's touch-friendly */
+        .sidebar-footer-toggle {
+             border-top: 1px solid var(--border-color);
+             /* Round the bottom corners of the toggle too to match sidebar */
+             border-radius: 0 0 16px 16px;
         }
 
         /* Mobile State: Full (Tall Sheet) */
@@ -175,7 +183,7 @@
 
         /* Mobile State: Half (Medium Sheet) */
         .section-info.state-half {
-            height: 35vh !important; /* Use VH for better mobile feel */
+            height: 35vh !important; 
         }
 
         /* Mobile State: Collapsed (Small Sheet - Just Header & Footer) */
@@ -185,9 +193,10 @@
             border: none;
         }
 
-        /* Adjust Zoom Controls position for mobile */
+        /* Adjust Zoom Controls position for mobile - move to BOTTOM RIGHT to avoid overlap */
         .top-right-zoom {
-            top: 10px;
+            top: auto;
+            bottom: 20px;
             right: 10px;
         }
         
