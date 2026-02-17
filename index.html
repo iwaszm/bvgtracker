@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Abfahrtsmonitor Berlin (Final Layout)</title>
+  <title>Abfahrtsmonitor Berlin (Final Touch)</title>
   
-  <!-- Google Fonts: Inter (UI), Roboto Mono (Time/Numbers), VT323 (LED Mode) -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@500;700&family=VT323&display=swap" rel="stylesheet">
@@ -18,17 +18,12 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
-      /* Core Brand Colors */
+      /* Colors */
       --bvg-yellow: #F0E400;
       --db-red: #EC0016;
       --ubahn-blue: #0063A5; 
 
-      /* Font Definitions */
-      --font-main: 'Inter', sans-serif;
-      --font-mono: 'Roboto Mono', monospace; 
-      --font-led: 'VT323', monospace;        
-
-      /* Dark Mode Variables */
+      /* Dark Mode */
       --bg-body: #222222;
       --bg-sidebar: #2b2b2b;
       --bg-section: #1a1a1a;
@@ -46,14 +41,15 @@
       --border-color: #444444;
       --hover-bg: #444444;
       
-      --ice-bg: #ffffff;
+      /* Silvery White for Fern */
+      --ice-bg: #F0F0F0; 
       --ice-text: #333333;
-      --ice-border: #999999;
+      --ice-border: #cccccc;
 
       --shadow-soft: 0 4px 12px rgba(0,0,0,0.5);
     }
 
-    /* Light Mode Variables */
+    /* Light Mode */
     body.light-mode {
       --bg-body: #e0e0e0;
       --bg-sidebar: #ffffff;
@@ -72,7 +68,7 @@
       --border-color: #dee2e6;
       --hover-bg: #f1f1f1;
       
-      --ice-bg: #f8f9fa;
+      --ice-bg: #F0F0F0;
       --ice-text: #212529;
       --ice-border: #dee2e6;
 
@@ -89,7 +85,7 @@
       margin: 0;
       background-color: var(--bg-body);
       color: var(--text-main);
-      font-family: var(--font-main); 
+      font-family: 'Inter', sans-serif; 
       transition: background-color 0.3s ease, color 0.3s ease;
       overscroll-behavior: none;
       font-size: 12px;
@@ -102,7 +98,7 @@
       position: relative; 
     }
 
-    /* Left Sidebar */
+    /* --- Sidebar & Layout --- */
     .sidebar {
       width: 380px;
       min-width: 320px;
@@ -112,13 +108,20 @@
       flex-direction: column;
       border-right: 1px solid var(--border-color);
       z-index: 1000;
+      /* Default transition for desktop or when NOT dragging */
       transition: background-color 0.3s ease, width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       overflow: hidden; 
+      will-change: height, transform;
     }
 
-    .sidebar.full-mode {
-        width: 100% !important;
-        border-right: none;
+    /* When dragging, we disable transition for instant follow */
+    .sidebar.is-dragging {
+        transition: none !important;
+    }
+    
+    /* When snapping after drag, use a spring-like transition */
+    .sidebar.is-snapping {
+        transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) !important;
     }
 
     .map-container {
@@ -129,25 +132,67 @@
       transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
-    /* --- MOBILE PORTRAIT OPTIMIZATIONS --- */
-    @media (max-width: 767px) and (orientation: portrait) {
+    /* Desktop Full Mode (Sidebar hides map) */
+    .sidebar.full-mode {
+        width: 100% !important;
+        border-right: none;
+    }
+
+    /* --- MOBILE OPTIMIZATIONS (Portrait) --- */
+    @media (max-width: 767px) {
         #app { flex-direction: column; }
-        .map-container { position: absolute !important; top: 0; left: 0; width: 100% !important; height: 100% !important; z-index: 1; }
-        .sidebar {
-            position: absolute; top: 0; left: 0; width: 100% !important; height: auto !important; max-height: 85vh; 
-            border-right: none; border-bottom: 1px solid var(--border-color); z-index: 2000; 
-            border-radius: 0 0 16px 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
-            transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            overflow: visible !important;
+        
+        .map-container { 
+            position: absolute !important; 
+            top: 0; left: 0; 
+            width: 100% !important; 
+            height: 100% !important; 
+            z-index: 1; 
         }
-        .sidebar-footer-toggle { border-top: 1px solid var(--border-color); border-radius: 0 0 16px 16px; }
-        .sidebar.mobile-full { height: 85vh !important; }
-        .sidebar.mobile-full .section-info { flex-grow: 1; height: auto !important; overflow-y: auto !important; }
-        .section-info.state-half { height: 35vh !important; overflow-y: auto !important; }
-        .section-info.state-collapsed { height: 0 !important; padding: 0 10px !important; border: none; overflow: hidden !important; }
-        .top-right-zoom { top: auto !important; bottom: 30px !important; right: 20px !important; flex-direction: column; align-items: flex-end; }
-        .settings-modal { width: 92% !important; max-height: 80vh; }
-        .modal-filter-row { flex-wrap: wrap; }
+        
+        .sidebar {
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100% !important; 
+            /* Height is controlled by JS styles or classes below */
+            max-height: 100%; /* Allow full height */
+            border-right: none; 
+            border-bottom: 1px solid var(--border-color); 
+            z-index: 2000; 
+            border-radius: 0 0 16px 16px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
+            overflow: hidden !important;
+        }
+
+        .sidebar.mobile-collapsed { height: 75px !important; } /* Only Header + Search slightly visible */
+        .sidebar.mobile-half { height: 45% !important; }
+        .sidebar.mobile-full { 
+            height: 100% !important; 
+            border-radius: 0 !important; /* No rounded corners on full screen */
+            border-bottom: none !important;
+        }
+
+        .sidebar-footer-toggle { 
+            border-top: 1px solid var(--border-color); 
+            height: 40px; /* Taller touch target */
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        
+        /* Drag Handle Indicator */
+        .sidebar-footer-toggle::after {
+            content: '';
+            width: 40px;
+            height: 4px;
+            background-color: var(--border-color);
+            border-radius: 2px;
+            position: absolute;
+        }
+
+        /* 强制并排，移除 wrap */
+        .modal-filter-row { flex-wrap: nowrap !important; }
     }
 
     #map { height: 100%; width: 100%; z-index: 1; background-color: var(--bg-body); }
@@ -163,13 +208,14 @@
         justify-content: center;
         align-items: center;
         flex-shrink: 0;
+        cursor: grab; /* Indicate draggable */
+        touch-action: none; /* Prevent browser scrolling on header */
     }
     .current-time {
-        font-family: var(--font-mono);
+        font-family: 'Roboto Mono', monospace;
         font-weight: 700;
         font-size: 15px;
         color: var(--text-main);
-        letter-spacing: 0px;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -192,7 +238,7 @@
       background-color: var(--bg-sidebar);
       position: relative;
       flex-shrink: 0; 
-      z-index: 2005; /* High Z-index for search */
+      z-index: 2005; 
     }
     
     .main-search-row {
@@ -251,60 +297,35 @@
     }
     .settings-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
 
+    /* Filter Buttons */
     .filter-group { display: flex; gap: 4px; flex-shrink: 0; }
-    
     .type-btn {
-      width: 32px; 
-      height: 32px; 
-      border: none;
-      border-radius: 4px;
-      color: #fff;
-      font-weight: 700; 
-      font-size: 12px;  
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0.3;
-      transition: all 0.2s ease;
-      background-color: #444;
-      line-height: 1; 
+      width: 32px; height: 32px; border: none; border-radius: 4px; color: #fff;
+      font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      opacity: 0.3; transition: all 0.2s ease; background-color: #444; line-height: 1; 
     }
     body.light-mode .type-btn { background-color: #e0e0e0; color: #555; }
     .type-btn:hover { transform: scale(1.05); opacity: 0.7; }
     .type-btn.active { opacity: 1; transform: scale(1.0); box-shadow: 0 2px 4px rgba(0,0,0,0.3); color: #fff; }
     body.light-mode .type-btn.active:not(.btn-fern) { color: #ffffff !important; }
-
     .type-btn.active.btn-s { background-color: #008D4F; }
     .type-btn.active.btn-u { background-color: var(--ubahn-blue); }
     .type-btn.active.btn-tram { background-color: #CC0000; }
     .type-btn.active.btn-bus { background-color: #A5027D; }
     .type-btn.active.btn-re { background-color: #EC0016; } 
-    .type-btn.active.btn-fern { background-color: var(--ice-bg); color: var(--ice-text); border: 1px solid var(--ice-border); } 
+    /* Silver/White background for Fern */
+    .type-btn.active.btn-fern { background-color: var(--ice-bg) !important; color: var(--ice-text) !important; border: 1px solid var(--ice-border); } 
 
     input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 8px 0; }
     input[type=range]:focus { outline: none; }
     input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 3px; }
     input[type=range]::-webkit-slider-thumb { height: 16px; width: 16px; border-radius: 50%; background: var(--bvg-yellow); cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
-    input[type=range]:focus::-webkit-slider-runnable-track { background: var(--hover-bg); }
 
-    /* Dropdown - Fixed for both Modal and Sidebar */
     .search-dropdown {
-        position: absolute !important; 
-        top: 100% !important; 
-        left: 0 !important; 
-        right: 0 !important;
-        width: 100% !important;
-        background-color: var(--bg-dropdown);
-        border: 1px solid var(--border-color); 
-        border-top: none; 
-        z-index: 2000;
-        max-height: 200px; 
-        overflow-y: auto; 
-        box-shadow: var(--shadow-soft); 
-        border-radius: 0 0 6px 6px;
-        margin-top: 0;
-        display: block;
+        position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important;
+        width: 100% !important; background-color: var(--bg-dropdown); border: 1px solid var(--border-color); 
+        border-top: none; z-index: 2000; max-height: 200px; overflow-y: auto; 
+        box-shadow: var(--shadow-soft); border-radius: 0 0 6px 6px; margin-top: 0; display: block;
     }
     .search-item { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; }
     .search-item:hover { background-color: var(--hover-bg); }
@@ -315,7 +336,15 @@
     .fav-header { padding: 8px 15px; font-size: 11px; color: var(--text-muted); background-color: var(--bg-section); text-transform: uppercase; letter-spacing: 1px; }
 
     /* Info List */
-    .section-info { flex-grow: 1; overflow-y: auto; padding: 10px; overflow-x: hidden; background-color: var(--bg-sidebar); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); min-height: 0; -webkit-overflow-scrolling: touch; }
+    .section-info { 
+        flex-grow: 1; 
+        overflow-y: auto; 
+        padding: 10px; 
+        overflow-x: hidden; 
+        background-color: var(--bg-sidebar); 
+        min-height: 0; 
+        -webkit-overflow-scrolling: touch; 
+    }
     .bus-card { background-color: var(--bg-card); margin-bottom: 8px; border-radius: 6px; padding: 0; transition: all 0.2s ease; border-left: 4px solid #666; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .bus-card:hover { background-color: var(--hover-bg); }
     .bus-card.cancelled { opacity: 0.65; border-left-color: var(--text-muted) !important; }
@@ -323,13 +352,9 @@
     .bus-card.cancelled .line-badge { background-color: var(--text-muted) !important; color: #fff !important; }
     .cancel-text { color: #ff5555; font-weight: bold; font-size: 13px; text-transform: none; letter-spacing: 0.5px; }
     
-    /* Font Size Control Classes */
     .font-large .bus-card .card-header { padding: 12px 14px; }
     .font-large .dest-text { font-size: 15px; }
     .font-large .time-large { font-size: 17px; }
-    .font-large .line-badge { font-size: 13px; min-width: 48px; }
-    .font-large .time-sub { font-size: 12px; }
-    .font-large .station-info-label { font-size: 12px !important; }
 
     .card-header { padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
     .card-info-left { flex: 1; min-width: 0; display: flex; flex-direction: column; margin-right: 10px; }
@@ -351,7 +376,7 @@
     .status-static { background-color: #888; }
     .status-cancel { background-color: #777; border: 1px solid #555; } 
 
-    .line-badge { background-color: #fff; color: #000; font-weight: 800; padding: 1px 5px; border-radius: 3px; font-family: var(--font-numbers); font-feature-settings: "tnum"; letter-spacing: -0.5px; font-size: 11px; min-width: 42px; text-align: center; display: inline-block; flex-shrink: 0; margin-right: 8px; border: 1px solid rgba(0,0,0,0.1); }
+    .line-badge { background-color: #fff; color: #000; font-weight: 800; padding: 1px 5px; border-radius: 3px; font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; letter-spacing: -0.5px; font-size: 11px; min-width: 42px; text-align: center; display: inline-block; flex-shrink: 0; margin-right: 8px; border: 1px solid rgba(0,0,0,0.1); }
     .product-subway .line-badge { background-color: var(--ubahn-blue); color: white; }
     .product-suburban .line-badge { background-color: #008D4F; color: white; }
     .product-tram .line-badge { background-color: #CC0000; color: white; }
@@ -362,25 +387,42 @@
     .dest-text { font-size: 13px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.3s; }
     body.light-mode .dest-text { font-weight: 600; }
     
-    .time-large { font-family: var(--font-mono); font-feature-settings: "tnum"; letter-spacing: -0.5px; font-size: 14px; font-weight: bold; color: var(--text-main); line-height: 1.2; }
-    .time-sub { font-family: var(--font-mono); font-feature-settings: "tnum"; font-size: 11px; color: var(--text-sub); text-align: right; margin-top: 2px; }
+    .time-large { font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; letter-spacing: -0.5px; font-size: 14px; font-weight: bold; color: var(--text-main); line-height: 1.2; }
+    .time-sub { font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; font-size: 11px; color: var(--text-sub); text-align: right; margin-top: 2px; }
 
     .stopover-container { background-color: rgba(0, 0, 0, 0.2); padding: 8px 12px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
     body.light-mode .stopover-container { background-color: rgba(0, 0, 0, 0.03); border-top: 1px solid rgba(0, 0, 0, 0.05); }
     .stopover-item { display: flex; align-items: center; padding: 3px 0; min-width: 0; }
-    .stopover-time { font-family: var(--font-mono); font-feature-settings: "tnum"; width: 45px; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+    .stopover-time { font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; width: 45px; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
     .stopover-node { width: 6px; height: 6px; border-radius: 50%; background-color: #aaa; margin: 0 10px; flex-shrink: 0; }
     .stopover-name { font-size: 12px; color: var(--text-sub); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .weiter-btn { width: 100%; background: none; border: 1px dashed var(--border-color); color: var(--text-muted); font-size: 11px; padding: 4px; margin-top: 8px; border-radius: 4px; }
     .weiter-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
 
-    .sidebar-footer-toggle { height: 28px; background-color: var(--bg-toggle); border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: background-color 0.2s, color 0.2s; flex-shrink: 0; font-size: 12px; z-index: 1002; padding-bottom: env(safe-area-inset-bottom); box-sizing: content-box; }
+    .sidebar-footer-toggle { 
+        height: 40px; 
+        background-color: var(--bg-toggle); 
+        border-top: 1px solid var(--border-color); 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        cursor: pointer; /* Desktop cursor */
+        cursor: grab; /* Touch indication */
+        color: var(--text-muted); 
+        transition: background-color 0.2s, color 0.2s; 
+        flex-shrink: 0; 
+        font-size: 12px; 
+        z-index: 1002; 
+        padding-bottom: env(safe-area-inset-bottom); 
+        box-sizing: content-box; 
+        touch-action: none; /* Important for gesture */
+    }
+    .sidebar-footer-toggle:active { cursor: grabbing; }
     .sidebar-footer-toggle:hover { background-color: var(--hover-bg); color: var(--bvg-yellow); }
     body.light-mode .sidebar-footer-toggle:hover { color: #d4c800; }
 
     /* Settings Modal */
     .settings-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 5000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; }
-    /* Updated Modal Width: 360px */
     .settings-modal { background-color: var(--bg-modal); width: 100%; max-width: 360px; max-height: 85vh; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: var(--text-main); overflow: hidden; }
     .settings-header { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 16px; }
     .settings-close { background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; }
@@ -388,160 +430,70 @@
     .settings-content { padding: 15px; overflow-y: auto; }
     .settings-section { margin-bottom: 20px; }
     .settings-section-title { font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 10px; font-weight: 700; }
-    .settings-actions-row { display: flex; gap: 10px; margin-bottom: 15px; }
-    .settings-action-btn { flex: 1; padding: 10px; border-radius: 6px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; }
-    .settings-action-btn:hover { background-color: var(--hover-bg); border-color: var(--bvg-yellow); }
+    
+    .control-row-split { display: flex; justify-content: space-between; align-items: stretch; width: 100%; margin-bottom: 10px; gap: 8px; height: 42px; }
+    .theme-group { display: flex; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 2px; flex: 3; }
+    .btn-independent { flex: 1; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: all 0.2s; height: 100%; }
+    .btn-independent:hover { background-color: var(--hover-bg); color: var(--text-main); border-color: var(--bvg-yellow); }
+    .btn-independent.active { background-color: var(--bg-card); color: var(--text-main); border-color: #999; }
+    .icon-btn { flex: 1; border: none; background: transparent; color: var(--text-muted); padding: 0; font-size: 14px; border-radius: 6px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; height: 100%; }
+    .icon-btn:hover { color: var(--text-main); background-color: rgba(255,255,255,0.05); }
+    .icon-btn.active { background-color: var(--bg-card); color: var(--text-main); box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
+    .icon-btn.active-led { background-color: #000; color: #ffaa00; border: 1px solid #ffaa00; text-shadow: 0 0 4px #ffaa00; }
+    
+    /* STATION INFO RESET BUTTON & LINE FILTER RESET BUTTON */
+    /* Transparent Background & No Border */
+    .reset-icon-btn { background-color: transparent !important; background: transparent !important; border: none !important; color: var(--text-muted); font-size: 10px; padding: 0 4px; cursor: pointer; transition: color 0.2s; display: flex; align-items: center; justify-content: center; appearance: none; -webkit-appearance: none; }
+    .reset-icon-btn:hover { color: var(--bvg-yellow); background: transparent !important; }
+    body.light-mode .reset-icon-btn:hover { color: #d4c800; }
 
-    .line-filter-list { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; }
-    .line-toggle { background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 5px; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; font-family: var(--font-numbers); font-weight: bold; }
+    /* LINE FILTER LAYOUT: Side-by-side */
+    .modal-filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: nowrap !important; justify-content: space-between; }
+    .modal-filter-row .search-input-wrapper { flex: 1; min-width: 60px; /* Allow shrinking */ }
+    .filter-group { flex-shrink: 0; display: flex; gap: 4px; }
+    
+    /* FORCE 5 COLUMNS FOR LINE FILTER */
+    .line-filter-list { 
+        display: grid; 
+        grid-template-columns: repeat(5, 1fr); 
+        gap: 6px; 
+        margin-top: 10px; 
+    }
+    .line-toggle { 
+        background-color: var(--bg-input); 
+        border: 1px solid var(--border-color); 
+        color: var(--text-muted); 
+        padding: 5px; 
+        border-radius: 4px; 
+        font-size: 11px; 
+        cursor: pointer; 
+        text-align: center; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        gap: 4px; 
+        font-family: 'Roboto Mono', monospace; 
+        font-weight: bold; 
+    }
     .line-toggle.active { background-color: var(--bg-card); color: var(--text-main); border-color: #666; }
     .line-toggle.hidden-line { opacity: 0.5; text-decoration: line-through; }
-    .station-info-label { color: var(--text-main) !important; font-weight: 400; }
-    .station-pill-static { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background-color: var(--bg-input); border-radius: 6px; border: 1px solid var(--border-color); height: 36px; }
-    
-    .reset-icon-btn { background: none; border: none; color: var(--text-muted); font-size: 10px; padding: 0 4px; cursor: pointer; transition: color 0.2s; display: flex; align-items: center; justify-content: center; }
-    .reset-icon-btn:hover { color: var(--bvg-yellow); }
-    body.light-mode .reset-icon-btn:hover { color: #d4c800; }
-    
-    .modal-filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-    
-    /* FIX: Adjusted width for tight fit in 360px modal */
-    .modal-filter-row .search-input-wrapper {
-        flex-grow: 1;
-        min-width: 0;
-    }
 
-    /* ------------------------------------------- */
-    /* NEW: Compact Icon Buttons Row               */
-    /* ------------------------------------------- */
-    /* Remove connected row styling, use gap instead */
-    .control-row-split {
-        display: flex;
-        justify-content: space-between;
-        align-items: stretch; /* Ensure same height */
-        width: 100%;
-        margin-bottom: 10px;
-        gap: 8px; /* Add spacing between groups */
-        height: 42px; /* Fixed height for the row */
-    }
-    
-    /* Theme Group: Connected Buttons */
-    .theme-group {
-        display: flex;
-        background-color: var(--bg-input);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 2px;
-        flex: 3; /* Occupies 3 units */
-    }
-    
-    /* Independent Buttons */
-    .btn-independent {
-        flex: 1; /* Occupies 1 unit */
-        background-color: var(--bg-input);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        padding: 0; 
-        transition: all 0.2s;
-        height: 100%; /* Fill row height */
-    }
-    .btn-independent:hover {
-        background-color: var(--hover-bg);
-        color: var(--text-main);
-        border-color: var(--bvg-yellow);
-    }
-    .btn-independent.active {
-        background-color: var(--bg-card);
-        color: var(--text-main);
-        border-color: #999;
-    }
-
-    .icon-btn {
-        flex: 1;
-        border: none;
-        background: transparent;
-        color: var(--text-muted);
-        padding: 0;
-        font-size: 14px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%; 
-    }
-    
-    .icon-btn:hover {
-        color: var(--text-main);
-        background-color: rgba(255,255,255,0.05);
-    }
-    
-    .icon-btn.active {
-        background-color: var(--bg-card);
-        color: var(--text-main);
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border: 1px solid var(--border-color);
-    }
-    
-    .icon-btn.active-led {
-        background-color: #000;
-        color: #ffaa00;
-        border: 1px solid #ffaa00;
-        text-shadow: 0 0 4px #ffaa00;
-    }
 
     /* Map UI */
     .rss-icon { color: #888; transition: color 0.3s; }
-    .radar-active .rss-icon { animation: pulse-yellow 2s infinite ease-in-out; color: var(--bvg-yellow); }
-    
-    .station-tooltip { 
-        background-color: rgba(30, 30, 30, 0.95); 
-        border: 1px solid var(--bvg-yellow); 
-        color: #fff; 
-        font-weight: bold; 
-        border-radius: 4px; 
-        box-shadow: 0 4px 8px rgba(0,0,0,0.4); 
-        font-size: 12px; 
-        padding: 4px 8px; 
-        display: flex; 
-        align-items: center; 
-        gap: 6px; 
-        margin-bottom: 0 !important; /* Reset margin */
-        position: relative;
-    }
-    
+    .station-tooltip { background-color: rgba(30, 30, 30, 0.95); border: 1px solid var(--bvg-yellow); color: #fff; font-weight: bold; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); font-size: 12px; padding: 4px 8px; display: flex; align-items: center; gap: 6px; margin-bottom: 0 !important; position: relative; }
     .leaflet-tooltip-top:before { display: none; }
-
-    .station-tooltip::after {
-        content: '';
-        position: absolute;
-        bottom: -15px; /* Adjust line length */
-        left: 50%;
-        transform: translateX(-50%);
-        width: 2px;
-        height: 15px; /* Adjust line length to touch marker top */
-        background-color: var(--bvg-yellow);
-        z-index: -1;
-    }
-
+    .station-tooltip::after { content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); width: 2px; height: 15px; background-color: var(--bvg-yellow); z-index: -1; }
     .vehicle-popup .leaflet-popup-content-wrapper { background-color: rgba(30, 30, 30, 0.95); border: 1px solid var(--bvg-yellow); border-radius: 4px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.6); color: #fff; }
     .vehicle-popup .leaflet-popup-content { margin: 6px 10px; font-weight: bold; font-size: 12px; line-height: 1.4; text-align: center; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
-    .vehicle-popup-badge { font-family: var(--font-numbers); font-feature-settings: "tnum"; font-weight: bold; }
+    .vehicle-popup-badge { font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; font-weight: bold; }
     .vehicle-popup .leaflet-popup-tip-container { display: none; } 
-    
     .vehicle-popup .leaflet-popup-content-wrapper { margin-bottom: 20px; position: relative; overflow: visible; }
     .vehicle-popup .leaflet-popup-content-wrapper::after { content: ''; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); width: 2px; height: 20px; background-color: var(--bvg-yellow); }
-    
     .vehicle-popup a.leaflet-popup-close-button { display: none; }
     .station-pos-marker { background-color: var(--bvg-yellow); border: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; box-shadow: 0 0 15px rgba(240, 228, 0, 0.8); box-sizing: border-box; }
     .vehicle-marker-wrapper { position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
-    .vehicle-marker { position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; color: white; font-family: var(--font-numbers); font-feature-settings: "tnum"; font-weight: bold; font-size: 11px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); border: 2px solid white; width: 32px; height: 32px; background-color: #555; }
+    .vehicle-marker { position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; color: white; font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; font-weight: bold; font-size: 11px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); border: 2px solid white; width: 32px; height: 32px; background-color: #555; }
     .marker-bus { background-color: #A5027D; } .marker-tram { background-color: #CC0000; } .marker-subway { background-color: var(--ubahn-blue); } .marker-suburban { background-color: #008D4F; } .marker-regional { background-color: var(--db-red); } .marker-express { background-color: #fff; color: #333; border-color: #999; }
     .floating-menu { position: absolute; z-index: 2000; display: flex; gap: 4px; background-color: rgba(30, 30, 30, 0.85); backdrop-filter: blur(10px); padding: 6px; border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: var(--shadow-soft); transition: all 0.3s; }
     .top-right-zoom { top: 20px; right: 20px; flex-direction: column; padding: 6px; }
@@ -550,114 +502,30 @@
     body.light-mode .menu-btn { color: #555; }
     .menu-btn:hover { background-color: rgba(255, 255, 255, 0.15); color: var(--bvg-yellow); transform: scale(1.05); }
     body.light-mode .menu-btn:hover { background-color: rgba(0, 0, 0, 0.05); color: #d4c800; }
-
-    /* FIX: Modal dropdown visibility - CRITICAL */
-    /* Ensure content inside modal doesn't get clipped and has background */
+    
     .settings-content .search-dropdown {
-        position: absolute !important; 
-        top: 100% !important; 
-        left: 0 !important; 
-        right: 0 !important;
-        width: 100% !important;
-        border-top: 1px solid var(--border-color);
-        box-shadow: none;
-        margin-top: 0;
-        border-radius: 0 0 6px 6px;
-        max-height: 200px;
-        overflow-y: auto;
-        display: block; /* Ensure it's not hidden */
-        background-color: var(--bg-dropdown); /* Ensure contrast */
-        z-index: 2000; /* Ensure visibility */
+        position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important;
+        width: 100% !important; border-top: 1px solid var(--border-color); box-shadow: none; margin-top: 0;
+        border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; display: block; 
+        background-color: var(--bg-dropdown); z-index: 2000;
     }
 
-    /* ------------------------------------------- */
-    /* LED MODE STYLES                             */
-    /* ------------------------------------------- */
-    .led-mode .section-info {
-        background-color: #000000 !important;
-        border-top: 2px solid #333;
-    }
-    
-    .led-mode .current-time {
-        font-family: var(--font-led) !important;
-        color: #ffaa00 !important;
-        font-size: 24px !important;
-        letter-spacing: 2px;
-        text-shadow: 0 0 5px rgba(255, 170, 0, 0.5);
-    }
-    
-    .led-mode .form-control-dark {
-        background-color: #000 !important;
-        border-color: #555 !important;
-        color: #ffaa00 !important;
-        font-family: var(--font-led) !important;
-        font-size: 18px !important;
-        letter-spacing: 1px;
-    }
-    
-    .led-mode .settings-btn {
-        background-color: #000 !important;
-        border-color: #555 !important;
-        color: #ffaa00 !important;
-    }
-
-    .led-mode .bus-card {
-        background-color: #000000 !important;
-        border-bottom: 1px dashed #333;
-        border-left: none !important; 
-        border-radius: 0 !important;
-        margin-bottom: 0;
-        box-shadow: none;
-    }
-    
+    /* LED Mode */
+    .led-mode .section-info { background-color: #000000 !important; border-top: 2px solid #333; }
+    .led-mode .current-time { font-family: 'VT323', monospace !important; color: #ffaa00 !important; font-size: 24px !important; letter-spacing: 2px; text-shadow: 0 0 5px rgba(255, 170, 0, 0.5); }
+    .led-mode .form-control-dark { background-color: #000 !important; border-color: #555 !important; color: #ffaa00 !important; font-family: 'VT323', monospace !important; font-size: 18px !important; letter-spacing: 1px; }
+    .led-mode .settings-btn { background-color: #000 !important; border-color: #555 !important; color: #ffaa00 !important; }
+    .led-mode .bus-card { background-color: #000000 !important; border-bottom: 1px dashed #333; border-left: none !important; border-radius: 0 !important; margin-bottom: 0; box-shadow: none; }
     .led-mode .bus-card:hover { background-color: #111 !important; }
-    
-    .led-mode .dest-text {
-        font-family: var(--font-led) !important;
-        font-size: 20px !important;
-        color: #ffaa00 !important; 
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    .led-mode .line-badge {
-        background-color: transparent !important;
-        color: #ffaa00 !important;
-        border: 1px solid #ffaa00;
-        font-family: var(--font-led) !important;
-        font-size: 18px !important;
-        border-radius: 2px;
-        padding: 0 4px;
-    }
-    
-    .led-mode .time-large {
-        font-family: var(--font-led) !important;
-        color: #ffaa00 !important;
-        font-size: 22px !important;
-    }
-    
-    .led-mode .time-sub {
-        font-family: var(--font-led) !important;
-        color: #cc8800 !important; 
-        font-size: 16px !important;
-    }
-    
-    .led-mode .station-info-label {
-        font-family: var(--font-led) !important;
-        color: #cc8800 !important;
-        text-transform: uppercase;
-    }
-    
+    .led-mode .dest-text { font-family: 'VT323', monospace !important; font-size: 20px !important; color: #ffaa00 !important; text-transform: uppercase; letter-spacing: 1px; }
+    .led-mode .line-badge { background-color: transparent !important; color: #ffaa00 !important; border: 1px solid #ffaa00; font-family: 'VT323', monospace !important; font-size: 18px !important; border-radius: 2px; padding: 0 4px; }
+    .led-mode .time-large { font-family: 'VT323', monospace !important; color: #ffaa00 !important; font-size: 22px !important; }
+    .led-mode .time-sub { font-family: 'VT323', monospace !important; color: #cc8800 !important; font-size: 16px !important; }
+    .led-mode .station-info-label { font-family: 'VT323', monospace !important; color: #cc8800 !important; text-transform: uppercase; }
     .led-mode .status-green { background-color: #ffaa00; animation: none; box-shadow: none; }
     .led-mode .status-static { background-color: #555; }
-    
     .led-mode .stopover-container { background-color: #111; border-top: 1px dashed #333; }
-    .led-mode .stopover-time, .led-mode .stopover-name {
-        font-family: var(--font-led) !important;
-        color: #ffaa00 !important;
-        font-size: 18px !important;
-        text-transform: uppercase;
-    }
+    .led-mode .stopover-time, .led-mode .stopover-name { font-family: 'VT323', monospace !important; color: #ffaa00 !important; font-size: 18px !important; text-transform: uppercase; }
     
   </style>
 </head>
@@ -675,9 +543,7 @@
                 <div class="settings-section">
                     <div class="settings-section-title">{{ t.displayLang }}</div>
                     
-                    <!-- NEW: Split Layout for Anzeige -->
                     <div class="control-row-split">
-                        <!-- Group 1: Theme (Connected) -->
                         <div class="theme-group">
                             <button class="icon-btn" :class="{ active: currentTheme === 'light' }" @click="setTheme('light')" :title="t.light">
                                 <i class="fas fa-sun"></i>
@@ -689,13 +555,9 @@
                                 <i class="fas fa-digital-tachograph"></i>
                             </button>
                         </div>
-                        
-                        <!-- Group 2: Font Size (Independent) -->
                         <button class="btn-independent" :class="{ active: isLargeFont }" @click="toggleFontSize" title="Schriftgröße">
                             <i class="fas fa-text-height"></i>
                         </button>
-                        
-                        <!-- Group 3: Language (Independent) -->
                         <button class="btn-independent" @click="toggleLang" title="Sprache">
                             <span style="font-weight: 900; font-size: 11px;">{{ currentLang.toUpperCase() }}</span>
                         </button>
@@ -721,13 +583,18 @@
                     
                     <!-- Slot 1 -->
                     <div class="mb-2">
-                        <div v-if="station1" class="station-pill-static">
-                            <span class="text-truncate me-2">{{ cleanName(station1.name) }}</span>
-                            <i class="fas fa-times station-remove" @click="clearStation(1)"></i>
-                        </div>
-                        <div v-else class="search-input-wrapper">
-                            <input class="form-control-dark" type="text" :placeholder="t.searchPlaceholder" v-model="s1Query" @input="onS1Input">
-                            <!-- Dropdown for Slot 1 -->
+                        <div class="search-input-wrapper">
+                            <input 
+                              class="form-control-dark" 
+                              type="text" 
+                              :placeholder="t.searchPlaceholder" 
+                              v-model="s1Query" 
+                              @input="onS1Input"
+                            >
+                            <!-- Show 'X' if there is text -->
+                            <button v-if="s1Query" @click="clearStation(1)" class="input-action-btn clear-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
                             <div v-if="s1Results.length > 0" class="search-dropdown">
                                 <div class="search-item" v-for="s in s1Results" :key="s.id" @click="setStation(1, s)">
                                      {{ cleanName(s.name) }} <i class="fas fa-plus text-muted"></i>
@@ -738,13 +605,17 @@
 
                     <!-- Slot 2 -->
                     <div class="mb-2">
-                        <div v-if="station2" class="station-pill-static">
-                            <span class="text-truncate me-2">{{ cleanName(station2.name) }}</span>
-                            <i class="fas fa-times station-remove" @click="clearStation(2)"></i>
-                        </div>
-                        <div v-else class="search-input-wrapper">
-                            <input class="form-control-dark" type="text" :placeholder="t.addPlaceholder" v-model="s2Query" @input="onS2Input">
-                            <!-- Dropdown for Slot 2 -->
+                        <div class="search-input-wrapper">
+                            <input 
+                              class="form-control-dark" 
+                              type="text" 
+                              :placeholder="t.addPlaceholder" 
+                              v-model="s2Query" 
+                              @input="onS2Input"
+                            >
+                            <button v-if="s2Query" @click="clearStation(2)" class="input-action-btn clear-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
                             <div v-if="s2Results.length > 0" class="search-dropdown">
                                 <div class="search-item" v-for="s in s2Results" :key="s.id" @click="setStation(2, s)">
                                      {{ cleanName(s.name) }} <i class="fas fa-plus text-muted"></i>
@@ -803,15 +674,26 @@
         </div>
     </div>
 
-    <!-- Left Sidebar -->
-    <!-- Apply 'led-mode' and 'font-large' class conditionally -->
-    <div class="sidebar" :class="[sidebarMobileClass, { 'full-mode': !showMap, 'led-mode': isLedMode, 'font-large': isLargeFont }]">
+    <!-- Left Sidebar with Touch Events -->
+    <div 
+        class="sidebar" 
+        ref="sidebarRef"
+        :class="[
+            sidebarMobileClass, 
+            { 'full-mode': !showMap, 'led-mode': isLedMode, 'font-large': isLargeFont, 'is-dragging': isDragging, 'is-snapping': isSnapping }
+        ]"
+        :style="dragStyle"
+    >
       
-      <div class="sidebar-header">
-          <!-- Monospace Time -->
+      <!-- Draggable Header -->
+      <div 
+        class="sidebar-header" 
+        @touchstart.passive="onTouchStart" 
+        @touchmove.passive="onTouchMove" 
+        @touchend="onTouchEnd"
+      >
           <div class="current-time">
               {{ currentTime }}
-              <!-- RSS Icon: Visible ONLY on error -->
               <i v-if="networkError" class="fas fa-rss ms-2 blink-error" title="Netzwerkfehler / No Connection"></i>
           </div>
       </div>
@@ -921,7 +803,16 @@
         </div>
       </div>
 
-      <div class="sidebar-footer-toggle" @click="toggleInfoState" title="Ansicht ändern">
+      <!-- Draggable Footer Handle -->
+      <div 
+        class="sidebar-footer-toggle" 
+        @click="toggleInfoState" 
+        @touchstart.passive="onTouchStart" 
+        @touchmove.passive="onTouchMove" 
+        @touchend="onTouchEnd"
+        title="Ansicht ändern"
+      >
+          <!-- Icon only visible on desktop/large screens, on mobile we use a 'handle' bar via CSS -->
           <i class="fas" :class="toggleIcon"></i>
       </div>
     </div>
@@ -1021,7 +912,6 @@
         const s1Results = ref([]);
         const s2Results = ref([]);
         
-        // Fix for S1/S2 Abort Controllers
         const s1AbortController = ref(null);
         const s2AbortController = ref(null);
         
@@ -1060,11 +950,10 @@
         const starredStations = ref([]); 
         const isShowingFavorites = ref(false); 
         
-        // Theme State
         const currentTheme = ref('dark'); 
         const isDarkMode = computed(() => currentTheme.value === 'dark' || currentTheme.value === 'led');
         const isLedMode = computed(() => currentTheme.value === 'led');
-        const isLargeFont = ref(false); // Font Size State
+        const isLargeFont = ref(false); 
         
         const toggleFontSize = () => {
             isLargeFont.value = !isLargeFont.value;
@@ -1089,7 +978,7 @@
         const isRadarActive = ref(false);
         const radarError = ref(false);
 
-        const infoState = ref(2);
+        const infoState = ref(1); // Default to Half on Mobile
 
         const lastRadarData = ref([]);
 
@@ -1100,9 +989,100 @@
         let vehicleTrails = {}; 
         let radarInterval; 
         
+        // --- NEW: Auto Refresh Variables ---
+        let autoRefreshTimer = null; 
+        // -----------------------------------
+        
         let searchTimeout;
         const searchAbortController = ref(null);
         let radarAbortController = null;
+
+        // --- Touch Logic Variables ---
+        const sidebarRef = ref(null);
+        const isDragging = ref(false);
+        const isSnapping = ref(false);
+        const dragHeight = ref(null);
+        const startY = ref(0);
+        const startHeight = ref(0);
+
+        const dragStyle = computed(() => {
+            if (!isDragging.value || dragHeight.value === null) return {};
+            return { height: `${dragHeight.value}px` };
+        });
+
+        const onTouchStart = (e) => {
+            // Only enable drag on mobile portrait
+            if (window.innerWidth > 767) return; 
+
+            isDragging.value = true;
+            isSnapping.value = false;
+            startY.value = e.touches[0].clientY;
+            
+            // Get current height
+            if (sidebarRef.value) {
+                startHeight.value = sidebarRef.value.offsetHeight;
+                dragHeight.value = startHeight.value;
+            }
+        };
+
+        const onTouchMove = (e) => {
+            if (!isDragging.value) return;
+            const currentY = e.touches[0].clientY;
+            const deltaY = currentY - startY.value;
+            
+            // On mobile, sidebar is top-aligned but looks like a top-sheet overlay?
+            // Wait, previous CSS says sidebar top:0, left:0. 
+            // So if I drag DOWN, height increases (deltaY is positive).
+            // If I drag UP, height decreases (deltaY is negative).
+            
+            let newHeight = startHeight.value + deltaY;
+            
+            // Limits
+            const maxH = window.innerHeight;
+            const minH = 75; // Collapsed height
+            
+            if (newHeight > maxH) newHeight = maxH;
+            if (newHeight < minH) newHeight = minH;
+            
+            dragHeight.value = newHeight;
+        };
+
+        const onTouchEnd = (e) => {
+            if (!isDragging.value) return;
+            isDragging.value = false;
+            isSnapping.value = true;
+            
+            // Determine nearest state
+            const h = dragHeight.value;
+            const windowH = window.innerHeight;
+            
+            // Thresholds
+            const thresholdCollapsed = 150; 
+            const thresholdFull = windowH * 0.75;
+            
+            if (h < thresholdCollapsed) {
+                infoState.value = 0; // Collapsed
+            } else if (h > thresholdFull) {
+                infoState.value = 2; // Full
+            } else {
+                // Check if closer to half (45%) or others
+                const diffToHalf = Math.abs(h - (windowH * 0.45));
+                const diffToFull = Math.abs(h - windowH);
+                const diffToColl = Math.abs(h - 75);
+                
+                if (diffToFull < diffToHalf && diffToFull < diffToColl) infoState.value = 2;
+                else if (diffToColl < diffToHalf) infoState.value = 0;
+                else infoState.value = 1; // Half
+            }
+
+            dragHeight.value = null; // Clear inline style so class takes over
+            
+            setTimeout(() => {
+                isSnapping.value = false;
+            }, 400);
+        };
+
+        // -----------------------------
 
         const productColors = {
           bus: '#A5027D',
@@ -1134,21 +1114,26 @@
             }
         };
 
-        const toggleInfoState = () => {
+        const toggleInfoState = (e) => {
+            // Only toggle on click if NOT dragging (simulated click from tap)
+            if (isDragging.value) return;
+            
             if (infoState.value === 2) { infoState.value = 0; } 
             else if (infoState.value === 0) { infoState.value = 1; } 
             else { infoState.value = 2; }
         };
 
         const infoStateClass = computed(() => {
-            if (infoState.value === 2) return 'state-full';
-            if (infoState.value === 1) return 'state-half';
-            return 'state-collapsed';
+            if (infoState.value === 2) return 'state-full mobile-full'; // Add mobile class mapping
+            if (infoState.value === 1) return 'state-half mobile-half';
+            return 'state-collapsed mobile-collapsed';
         });
 
         const sidebarMobileClass = computed(() => {
+            // These classes are used for state management via CSS
             if (infoState.value === 2) return 'mobile-full';
-            return 'mobile-auto';
+            if (infoState.value === 1) return 'mobile-half';
+            return 'mobile-collapsed';
         });
 
         const toggleIcon = computed(() => {
@@ -1169,6 +1154,13 @@
           }
         });
 
+        watch(infoState, () => {
+             // Invalidate map size when info state changes (especially landscape)
+             setTimeout(() => {
+                 if(map) map.invalidateSize();
+             }, 350);
+        });
+
         onMounted(() => {
           if (!document.getElementById("map")) return;
           map = L.map("map", { zoomControl: false }).setView([52.5200, 13.4050], 13);
@@ -1185,8 +1177,21 @@
                   document.querySelectorAll('.leaflet-marker-icon').forEach(el => { el.classList.remove('no-transition'); });
               }, 100);
           });
+          
+          // Fix map rendering on resize (orientation change)
+          const resizeObserver = new ResizeObserver(() => {
+             if(map) map.invalidateSize();
+          });
+          resizeObserver.observe(document.getElementById('app'));
 
           setInterval(() => { now.value = new Date(); currentTime.value = now.value.toLocaleTimeString("de-DE"); }, 1000);
+          
+          // Start Auto Refresh Loop
+          autoRefreshTimer = setInterval(() => {
+              if (watchedStations.value.length > 0) {
+                  fetchDepartures(true); // true = silent refresh
+              }
+          }, 30000); // 30 seconds
 
           const saved = localStorage.getItem('bvg_fav_stations');
           if (saved) { starredStations.value = JSON.parse(saved); }
@@ -1194,6 +1199,7 @@
 
         onUnmounted(() => {
           if (radarInterval) clearInterval(radarInterval);
+          if (autoRefreshTimer) clearInterval(autoRefreshTimer);
         });
 
         const cleanName = (name) => {
@@ -1239,8 +1245,15 @@
         };
         
         // Pass correct abort controllers
-        const onS1Input = () => handleSearch(s1Query, s1Results, s1AbortController);
-        const onS2Input = () => handleSearch(s2Query, s2Results, s2AbortController);
+        // Logic change: When typing, if a station was selected, we clear it (because user is modifying text)
+        const onS1Input = () => {
+            if (station1.value) station1.value = null; // Unlink if typing
+            handleSearch(s1Query, s1Results, s1AbortController);
+        };
+        const onS2Input = () => {
+            if (station2.value) station2.value = null;
+            handleSearch(s2Query, s2Results, s2AbortController);
+        };
 
         const handleSearch = (queryRef, resultsRef, abortRef) => {
           if (searchTimeout) clearTimeout(searchTimeout);
@@ -1272,7 +1285,7 @@
           station1.value = station;
           station2.value = null;
           searchResults.value = [];
-          if (infoState.value === 0) { infoState.value = 2; }
+          if (infoState.value === 0) { infoState.value = 1; } // Go to Half on selection
           updateMapForStations();
           fetchDepartures();
         };
@@ -1280,11 +1293,11 @@
         const setStation = (slot, station) => {
             if (slot === 1) {
                 station1.value = station;
-                s1Query.value = "";
+                s1Query.value = cleanName(station.name); // Fill input
                 s1Results.value = [];
             } else {
                 station2.value = station;
-                s2Query.value = "";
+                s2Query.value = cleanName(station.name); // Fill input
                 s2Results.value = [];
             }
             updateMapForStations();
@@ -1292,8 +1305,15 @@
         };
 
         const clearStation = (slot) => {
-            if (slot === 1) station1.value = null;
-            else station2.value = null;
+            if (slot === 1) {
+                station1.value = null;
+                s1Query.value = "";
+                s1Results.value = [];
+            } else {
+                station2.value = null;
+                s2Query.value = "";
+                s2Results.value = [];
+            }
             updateMapForStations();
             fetchDepartures();
         };
@@ -1301,6 +1321,8 @@
         const resetStations = () => {
             station1.value = null;
             station2.value = null;
+            s1Query.value = "";
+            s2Query.value = "";
             s1Results.value = [];
             s2Results.value = [];
             updateMapForStations();
@@ -1396,13 +1418,13 @@
 
         const visibleStopovers = computed(() => currentTripStopovers.value.slice(0, stopoverLimit.value));
 
-        const fetchDepartures = async () => {
+        const fetchDepartures = async (silent = false) => {
           if (watchedStations.value.length === 0) {
               departuresRaw.value = [];
               return;
           }
 
-          loading.value = true;
+          if (!silent) loading.value = true;
           try {
             const promises = watchedStations.value.map(station => 
                 axios.get(`${API_BASE}/stops/${station.id}/departures`, { 
@@ -1419,9 +1441,9 @@
             startRadarLoop();
           } catch (e) { 
               console.error(e);
-              departuresRaw.value = []; 
+              if (!silent) departuresRaw.value = []; 
           } finally { 
-              loading.value = false; 
+              if (!silent) loading.value = false; 
           }
         };
 
@@ -1654,7 +1676,9 @@
           isLedMode, 
           currentTheme, setTheme, 
           networkError,
-          isLargeFont, toggleFontSize // NEW
+          isLargeFont, toggleFontSize,
+          // Touch
+          onTouchStart, onTouchMove, onTouchEnd, isDragging, isSnapping, dragStyle, sidebarRef
         };
       }
     }).mount("#app");
