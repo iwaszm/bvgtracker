@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Abfahrtsmonitor Berlin (Synced & Gesture)</title>
+  <title>Abfahrtsmonitor Berlin (Draggable Handle)</title>
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -112,6 +112,11 @@
       overflow: hidden; 
       will-change: height, transform;
     }
+    
+    /* When dragging, disable transition for immediate response */
+    .sidebar.is-dragging {
+        transition: none !important;
+    }
 
     .map-container {
       flex-grow: 1;
@@ -151,14 +156,14 @@
             border-radius: 0 0 16px 16px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
             overflow: hidden !important;
-            touch-action: none; /* Prevent default browser scrolling/swiping on the container itself */
+            touch-action: none; /* Prevent browser scroll on sidebar container itself if needed */
         }
 
         /* COLLAPSED STATE ADJUSTMENT: 
-           Height needs to fit: Header (~45px) + Search (~66px) + Footer (~30px) + Padding
-           Increased to 160px to ensure the handle bar (control key) is fully visible.
+           Height tightly fits: Header (~37px) + Search (~66px) + Footer (30px) + Borders/Gaps
+           Set to 135px to hide the Info section completely.
         */
-        .sidebar.mobile-collapsed { height: 160px !important; } 
+        .sidebar.mobile-collapsed { height: 135px !important; } 
         
         .sidebar.mobile-half { height: 50% !important; }
         .sidebar.mobile-full { 
@@ -192,7 +197,6 @@
         justify-content: center;
         align-items: center;
         flex-shrink: 0;
-        cursor: grab; /* Indicating draggable area */
     }
     .current-time {
         font-family: 'Roboto Mono', monospace;
@@ -398,9 +402,11 @@
         font-size: 12px; 
         z-index: 1002; 
         padding-bottom: env(safe-area-inset-bottom); 
-        box-sizing: content-box; 
+        box-sizing: content-box;
+        touch-action: none; /* Critical for dragging */
     }
     .sidebar-footer-toggle:hover { background-color: var(--hover-bg); }
+    .sidebar-footer-toggle:active { cursor: grabbing; }
     
     /* Handle Bar Style (Drawer Handle) */
     .handle-bar {
@@ -691,11 +697,8 @@
         ref="sidebarRef"
         :class="[
             sidebarMobileClass, 
-            { 'full-mode': !showMap, 'led-mode': isLedMode, 'font-large': isLargeFont }
+            { 'full-mode': !showMap, 'led-mode': isLedMode, 'font-large': isLargeFont, 'is-dragging': isDragging }
         ]"
-        @touchstart="onTouchStart"
-        @touchmove="onTouchMove"
-        @touchend="onTouchEnd"
     >
       
       <!-- Draggable Header -->
@@ -817,6 +820,9 @@
         class="sidebar-footer-toggle" 
         @click="toggleInfoState" 
         title="Ansicht ändern"
+        @touchstart.stop="onDragStart"
+        @touchmove.stop="onDragMove"
+        @touchend.stop="onDragEnd"
       >
           <!-- New Handle Bar Icon -->
           <div class="handle-bar"></div>
@@ -925,8 +931,10 @@
         const networkError = ref(false); 
         
         // Touch Gesture Variables
-        const touchStartY = ref(0);
-        const touchEndY = ref(0);
+        const isDragging = ref(false);
+        const dragStartY = ref(0);
+        const dragStartHeight = ref(0);
+        const sidebarRef = ref(null);
 
         axios.interceptors.response.use(
             response => {
@@ -1008,9 +1016,6 @@
         const searchAbortController = ref(null);
         let radarAbortController = null;
 
-        // --- Touch Logic Removed ---
-        const sidebarRef = ref(null);
-
         // -----------------------------
 
         const productColors = {
@@ -1044,42 +1049,55 @@
         };
 
         const toggleInfoState = (e) => {
+            if (isDragging.value) return; // Prevent click when dragging
             if (infoState.value === 2) { infoState.value = 0; } 
             else if (infoState.value === 0) { infoState.value = 1; } 
             else { infoState.value = 2; }
         };
         
-        // Touch Handlers for Sidebar Gestures
-        const onTouchStart = (e) => {
-            touchStartY.value = e.touches[0].clientY;
+        // --- DRAG LOGIC FOR HANDLE ---
+        const onDragStart = (e) => {
+            isDragging.value = true;
+            dragStartY.value = e.touches[0].clientY;
+            const rect = sidebarRef.value.getBoundingClientRect();
+            dragStartHeight.value = rect.height;
         };
         
-        const onTouchMove = (e) => {
-            touchEndY.value = e.touches[0].clientY;
-        };
-        
-        const onTouchEnd = (e) => {
-            const distance = touchStartY.value - touchEndY.value;
-            const threshold = 50; 
-            
-            // Only trigger if a significant move happened
-            if (Math.abs(distance) < threshold) return;
-            
-            // Avoid triggering if user was scrolling inside the list
-            // Simple heuristic: if target is inside .section-info and it is scrollable, be careful.
-            // But for now, let's allow global swipe on sidebar if it's mobile.
-            if (window.innerWidth > 767) return; 
+        const onDragMove = (e) => {
+            if (!isDragging.value) return;
+            const currentY = e.touches[0].clientY;
+            // Moving UP decreases Y, so delta is positive -> height increases
+            const deltaY = dragStartY.value - currentY; 
+            let newHeight = dragStartHeight.value + deltaY;
 
-            if (distance > 0) {
-                // Swipe Up
-                if (infoState.value === 0) infoState.value = 1;
-                else if (infoState.value === 1) infoState.value = 2;
+            const maxHeight = window.innerHeight;
+            const minHeight = 135; // Collapsed height constraint
+            
+            if (newHeight > maxHeight) newHeight = maxHeight;
+            if (newHeight < minHeight) newHeight = minHeight;
+
+            sidebarRef.value.style.height = `${newHeight}px`;
+        };
+        
+        const onDragEnd = (e) => {
+            isDragging.value = false;
+            // Remove inline style to let CSS classes take over transition
+            const finalHeight = parseFloat(sidebarRef.value.style.height) || dragStartHeight.value;
+            sidebarRef.value.style.height = ''; 
+            
+            const windowH = window.innerHeight;
+            const ratio = finalHeight / windowH;
+
+            // Snap logic based on final position
+            if (ratio < 0.35) {
+                infoState.value = 0; // Collapsed
+            } else if (ratio < 0.85) {
+                infoState.value = 1; // Half
             } else {
-                // Swipe Down
-                if (infoState.value === 2) infoState.value = 1;
-                else if (infoState.value === 1) infoState.value = 0;
+                infoState.value = 2; // Full
             }
         };
+        // -----------------------------
 
         const infoStateClass = computed(() => {
             if (infoState.value === 2) return 'state-full mobile-full'; // Add mobile class mapping
@@ -1644,7 +1662,7 @@
           networkError,
           isLargeFont, toggleFontSize,
           sidebarRef,
-          onTouchStart, onTouchMove, onTouchEnd
+          isDragging, onDragStart, onDragMove, onDragEnd
         };
       }
     }).mount("#app");
