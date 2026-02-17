@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Abfahrtsmonitor Berlin (Drawer Style)</title>
+  <title>Abfahrtsmonitor Berlin (Status Dot Update)</title>
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,9 +42,9 @@
       --hover-bg: #444444;
       
       /* Silvery White for Fern */
-      --ice-bg: #F0F0F0; 
-      --ice-text: #333333;
-      --ice-border: #cccccc;
+      --ice-bg: #F5F5F5; 
+      --ice-text: #111111;
+      --ice-border: #999999;
 
       --shadow-soft: 0 4px 12px rgba(0,0,0,0.5);
     }
@@ -68,9 +68,9 @@
       --border-color: #dee2e6;
       --hover-bg: #f1f1f1;
       
-      --ice-bg: #F0F0F0;
-      --ice-text: #212529;
-      --ice-border: #dee2e6;
+      --ice-bg: #FFFFFF;
+      --ice-text: #000000;
+      --ice-border: #666666;
 
       --shadow-soft: 0 4px 12px rgba(0,0,0,0.1);
     }
@@ -109,14 +109,11 @@
       border-right: 1px solid var(--border-color);
       z-index: 1000;
       transition: background-color 0.3s ease, width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-      overflow: hidden; 
+      overflow: visible !important; 
       will-change: height, transform;
     }
     
-    /* When dragging, disable transition for immediate response */
-    .sidebar.is-dragging {
-        transition: none !important;
-    }
+    .sidebar.is-dragging { transition: none !important; }
 
     .map-container {
       flex-grow: 1;
@@ -126,13 +123,9 @@
       transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
-    /* Desktop Full Mode (Sidebar hides map) */
-    .sidebar.full-mode {
-        width: 100% !important;
-        border-right: none;
-    }
+    .sidebar.full-mode { width: 100% !important; border-right: none; }
 
-    /* --- MOBILE OPTIMIZATIONS (Portrait) --- */
+    /* --- MOBILE OPTIMIZATIONS --- */
     @media (max-width: 767px) {
         #app { flex-direction: column; }
         
@@ -146,8 +139,7 @@
         
         .sidebar {
             position: absolute; 
-            top: 0; 
-            left: 0; 
+            top: 0; left: 0; 
             width: 100% !important; 
             max-height: 100%;
             border-right: none; 
@@ -155,15 +147,10 @@
             z-index: 2000; 
             border-radius: 0 0 16px 16px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
-            overflow: hidden !important;
             touch-action: none; 
         }
 
-        /* COLLAPSED STATE ADJUSTMENT: 
-           Calculated: Header (~37px) + Search (~66px) + Footer (~24px) + Borders
-           Increased slightly to 140px to ensure footer is fully visible and not cut off.
-        */
-        .sidebar.mobile-collapsed { height: 140px !important; } 
+        .sidebar.mobile-collapsed { height: 130px !important; } 
         
         .sidebar.mobile-half { height: 50% !important; }
         .sidebar.mobile-full { 
@@ -172,15 +159,12 @@
             border-bottom: none !important;
         }
 
-        /* Footer Handle at bottom */
         .sidebar-footer-toggle { 
-            height: 24px; /* Slightly thicker */
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
+            height: 24px; 
+            display: flex; align-items: center; justify-content: center;
             border-top: 1px solid var(--border-color);
-            margin-top: auto; /* Push to bottom */
-            background-color: var(--bg-sidebar); /* Ensure opacity */
+            margin-top: auto; 
+            background-color: var(--bg-sidebar); 
         }
         
         .modal-filter-row { flex-wrap: nowrap !important; }
@@ -219,15 +203,8 @@
         gap: 8px;
     }
     
-    .blink-error {
-        animation: blink-red 1.5s infinite;
-        color: #ff3333;
-    }
-    @keyframes blink-red {
-        0% { opacity: 1; }
-        50% { opacity: 0.3; }
-        100% { opacity: 1; }
-    }
+    .blink-error { animation: blink-red 1.5s infinite; color: #ff3333; }
+    @keyframes blink-red { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
     /* Search Section */
     .section-search {
@@ -239,59 +216,26 @@
       z-index: 2005; 
     }
     
-    .main-search-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .search-input-wrapper { 
-        position: relative; 
-        display: flex; 
-        align-items: center; 
-        flex-grow: 1;
-        min-width: 0; 
-    }
+    .main-search-row { display: flex; align-items: center; gap: 8px; }
+    .search-input-wrapper { position: relative; display: flex; align-items: center; flex-grow: 1; min-width: 0; }
 
     .form-control-dark {
       background-color: var(--bg-input);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 0 12px;     
-      height: 42px;        
-      border-radius: 8px; 
-      width: 100%;
-      font-size: 14px; 
-      transition: all 0.3s;
+      padding: 0 12px; height: 42px; border-radius: 8px; width: 100%; font-size: 14px; transition: all 0.3s;
     }
     .form-control-dark:focus { border-color: var(--bvg-yellow); box-shadow: 0 0 0 0.2rem rgba(240, 228, 0, 0.25); }
 
     .input-action-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 5px;
+      position: absolute; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px;
     }
     .input-action-btn:hover { color: var(--text-main); }
     .clear-btn { right: 10px; } 
 
     .settings-btn {
-      width: 42px;         
-      height: 42px;        
-      border-radius: 8px; 
-      border: 1px solid var(--border-color);
-      background-color: var(--bg-input);
-      color: var(--text-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-      flex-shrink: 0;
+      width: 42px; height: 42px; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-muted);
+      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
     }
     .settings-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
 
@@ -306,13 +250,19 @@
     .type-btn:hover { transform: scale(1.05); opacity: 0.7; }
     .type-btn.active { opacity: 1; transform: scale(1.0); box-shadow: 0 2px 4px rgba(0,0,0,0.3); color: #fff; }
     body.light-mode .type-btn.active:not(.btn-fern) { color: #ffffff !important; }
+    
     .type-btn.active.btn-s { background-color: #008D4F; }
     .type-btn.active.btn-u { background-color: var(--ubahn-blue); }
     .type-btn.active.btn-tram { background-color: #CC0000; }
     .type-btn.active.btn-bus { background-color: #A5027D; }
     .type-btn.active.btn-re { background-color: #EC0016; } 
-    /* Silver/White background for Fern */
-    .type-btn.active.btn-fern { background-color: var(--ice-bg) !important; color: var(--ice-text) !important; border: 1px solid var(--ice-border); } 
+    
+    .type-btn.active.btn-fern { 
+        background-color: var(--ice-bg) !important; 
+        color: var(--ice-text) !important; 
+        border: 1px solid var(--ice-border); 
+        box-shadow: 0 0 5px rgba(255,255,255,0.2);
+    } 
 
     input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 8px 0; }
     input[type=range]:focus { outline: none; }
@@ -322,8 +272,9 @@
     .search-dropdown {
         position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important;
         width: 100% !important; background-color: var(--bg-dropdown); border: 1px solid var(--border-color); 
-        border-top: none; z-index: 2000; max-height: 200px; overflow-y: auto; 
-        box-shadow: var(--shadow-soft); border-radius: 0 0 6px 6px; margin-top: 0; display: block;
+        border-top: none; z-index: 3000; 
+        max-height: 250px; overflow-y: auto; 
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5); border-radius: 0 0 6px 6px; margin-top: 0; display: block;
     }
     .search-item { padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; }
     .search-item:hover { background-color: var(--hover-bg); }
@@ -398,9 +349,8 @@
     .weiter-btn { width: 100%; background: none; border: 1px dashed var(--border-color); color: var(--text-muted); font-size: 11px; padding: 4px; margin-top: 8px; border-radius: 4px; }
     .weiter-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
 
-    /* --- NEW CONTROL BAR POSITION & STYLE --- */
     .sidebar-footer-toggle { 
-        height: 24px;  /* Increased from 14px to 24px */
+        height: 24px;  
         background-color: var(--bg-toggle); 
         border-top: 1px solid var(--border-color);
         display: flex; 
@@ -414,15 +364,14 @@
         z-index: 1002; 
         box-sizing: content-box;
         touch-action: none; 
-        margin-top: auto; /* Force to bottom */
+        margin-top: auto; 
     }
     .sidebar-footer-toggle:hover { background-color: var(--hover-bg); }
     .sidebar-footer-toggle:active { cursor: grabbing; }
     
-    /* Handle Bar Style (Drawer Handle) */
     .handle-bar {
         width: 40px;
-        height: 4px; /* Slightly thicker */
+        height: 4px; 
         background-color: #666;
         border-radius: 2px;
         transition: background-color 0.3s;
@@ -499,7 +448,7 @@
         padding: 0; 
         box-shadow: 0 4px 12px rgba(0,0,0,0.6); 
         color: #fff; 
-        margin-bottom: 0; /* Remove margin, handled by pseudo element height */
+        margin-bottom: 0; 
         position: relative; 
         overflow: visible; 
     }
@@ -510,11 +459,11 @@
     .vehicle-popup .leaflet-popup-content-wrapper::after { 
         content: ''; 
         position: absolute; 
-        bottom: -15px; /* Match station tooltip connection length */
+        bottom: -15px; 
         left: 50%; 
         transform: translateX(-50%); 
         width: 2px; 
-        height: 15px; /* Long connection line */
+        height: 15px; 
         background-color: var(--bvg-yellow); 
     }
     
@@ -555,22 +504,8 @@
     .led-mode .stopover-container { background-color: #111; border-top: 1px dashed #333; }
     .led-mode .stopover-time, .led-mode .stopover-name { font-family: 'VT323', monospace !important; color: #ffaa00 !important; font-size: 18px !important; text-transform: uppercase; }
 
-    /* API Source Badge */
-    .api-source-badge {
-        position: absolute;
-        bottom: 8px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: rgba(0,0,0,0.6);
-        color: #aaa;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 9px;
-        z-index: 5000;
-        pointer-events: none;
-        white-space: nowrap;
-        border: 1px solid rgba(255,255,255,0.1);
-    }
+    /* API Source Badge - REMOVED VISIBILITY FOR CLEANER LOOK */
+    .api-source-badge { display: none; } 
     
   </style>
 </head>
@@ -680,7 +615,6 @@
                     </div>
                     
                     <div class="modal-filter-row">
-                         <!-- Removed search-input-wrapper for lines as requested -->
                          <div class="filter-group">
                             <button class="type-btn btn-s" :class="{ active: isTypeActive('suburban') }" @click="toggleType('suburban')">S</button>
                             <button class="type-btn btn-u" :class="{ active: isTypeActive('subway') }" @click="toggleType('subway')">U</button>
@@ -710,7 +644,6 @@
                 <!-- Footer -->
                 <div class="mt-4 text-center" style="font-size: 10px; line-height: 1.4; border-top: 1px solid var(--border-color); padding-top: 10px; color: #aaaaaa;">
                     <div>{{ t.dataSource }}: <a href="https://v6.bvg.transport.rest" target="_blank" style="color: inherit; text-decoration: underline;">v6.bvg.transport.rest</a></div>
-                    <div v-if="currentApiName !== 'BVG'" style="color: var(--bvg-yellow)">Backup: {{ currentApiName }}</div>
                     <div>{{ t.disclaimer }}</div>
                     <div><a href="https://github.com/iwaszm/BerlinStationMonitor" target="_blank" style="color: inherit; text-decoration: underline;">GitHub Repo</a></div>
                 </div>
@@ -733,7 +666,6 @@
           <div class="current-time">
               {{ currentTime }}
               <i v-if="networkError" class="fas fa-rss ms-2 blink-error" title="Netzwerkfehler / Switching API..."></i>
-              <span v-if="currentApiName !== 'BVG'" style="font-size: 9px; color: var(--bvg-yellow); border: 1px solid var(--bvg-yellow); padding: 0 3px; border-radius: 3px; margin-left: 6px;">{{ currentApiName }}</span>
           </div>
       </div>
 
@@ -805,12 +737,26 @@
         >
           <div class="card-header" @click="toggleTrip(dep)">
             <div class="card-info-left">
+              <!-- Top Row: Line + Destination -->
               <div class="d-flex align-items-center"> 
                 <span class="line-badge">{{ dep.line.name }}</span>
                 <div class="dest-text" :title="cleanName(dep.direction)">{{ cleanName(dep.direction) }}</div>
               </div>
-              <div v-if="watchedStations.length > 1" class="station-info-label" style="font-size: 10px; margin-top: 2px;">
-                 <i class="fas fa-arrow-right me-1"></i>{{ cleanName(dep.stationName) }}
+
+              <!-- Bottom Row: Updated Logic with No Wrap -->
+              <div class="d-flex align-items-center mt-1" style="font-size: 11px; color: var(--text-muted); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                 
+                 <!-- Multi Station Mode: Show Station Name -->
+                 <span v-if="watchedStations.length > 1" class="me-2">
+                     <i class="fas fa-map-marker-alt me-1" style="opacity: 0.7; font-size: 9px;"></i>{{ cleanName(dep.stationName) }}
+                 </span>
+
+                 <!-- Rail Only: Platform -->
+                 <span v-if="isRail(dep.line.product) && (dep.platform || dep.plannedPlatform)">
+                     Gl. {{ dep.platform || dep.plannedPlatform }}
+                 </span>
+                 
+                 <!-- Note: Removed the +5 delay text as requested -->
               </div>
             </div>
 
@@ -844,7 +790,7 @@
         </div>
       </div>
       
-      <!-- 4. MOVED: Draggable Handle (Bottom Footer) -->
+      <!-- 4. Draggable Handle (Bottom Footer) -->
       <div 
         class="sidebar-footer-toggle" 
         @click="toggleInfoState" 
@@ -861,9 +807,6 @@
     <!-- Right Map -->
     <div class="map-container" :class="{ 'radar-active': isRadarActive }">
       <div id="map"></div>
-      <div class="api-source-badge" v-if="currentApiName !== 'BVG' && showMap">
-        Source: {{ currentApiName }}
-      </div>
       <div class="floating-menu top-right-zoom">
         <button class="menu-btn" @click="zoomIn" :title="t.zoomIn"><i class="fas fa-plus"></i></button>
         <button class="menu-btn" @click="zoomOut" :title="t.zoomOut"><i class="fas fa-minus"></i></button>
@@ -946,8 +889,8 @@
             currentLang.value = currentLang.value === 'de' ? 'en' : 'de';
         };
 
-        const searchQuery = ref(""); // Currently unused/deprecated in favor of s1Query, but kept for logic safety
-        const searchResults = ref([]); // Deprecated in favor of s1Results
+        const searchQuery = ref(""); 
+        const searchResults = ref([]); 
         
         const station1 = ref(null);
         const station2 = ref(null);
@@ -981,9 +924,7 @@
             if (currentApiIndex.value < apiEndpoints.length - 1) {
                 currentApiIndex.value++;
                 console.log(`Switching API to ${currentApiName.value} (${apiBase.value})`);
-                // Clear error temporarily to try new API
                 networkError.value = false;
-                // Trigger re-fetch if we have stations
                 if (watchedStations.value.length > 0) {
                     fetchDepartures();
                 }
@@ -998,7 +939,6 @@
             error => {
                 if (error.message === 'Network Error' || error.code === 'ERR_NETWORK' || (error.response && error.response.status >= 500)) {
                     networkError.value = true;
-                    // Auto-switch API if primary fails
                     if (currentApiIndex.value === 0) {
                         switchApi();
                     }
@@ -1014,9 +954,6 @@
             return list;
         });
 
-        // Sync logic: s1Query controls the main bar.
-        // We do NOT overwrite s1Query if station1 is already set correctly, to avoid cursor jumps.
-        // But if stations change programmatically (e.g. from favorites), we update text.
         watch(station1, (newVal) => {
              if (newVal) {
                  s1Query.value = cleanName(newVal.name);
@@ -1066,15 +1003,11 @@
         let vehicleTrails = {}; 
         let radarInterval; 
         
-        // --- NEW: Auto Refresh Variables ---
         let autoRefreshTimer = null; 
-        // -----------------------------------
         
         let searchTimeout;
         const searchAbortController = ref(null);
         let radarAbortController = null;
-
-        // -----------------------------
 
         const productColors = {
           bus: '#A5027D',
@@ -1105,13 +1038,12 @@
         };
 
         const toggleInfoState = (e) => {
-            if (isDragging.value) return; // Prevent click when dragging
+            if (isDragging.value) return; 
             if (infoState.value === 2) { infoState.value = 0; } 
             else if (infoState.value === 0) { infoState.value = 1; } 
             else { infoState.value = 2; }
         };
         
-        // --- DRAG LOGIC FOR HANDLE ---
         const onDragStart = (e) => {
             isDragging.value = true;
             dragStartY.value = e.touches[0].clientY;
@@ -1122,12 +1054,12 @@
         const onDragMove = (e) => {
             if (!isDragging.value) return;
             const currentY = e.touches[0].clientY;
-            // Moving UP decreases Y, so delta is positive -> height increases
             const deltaY = dragStartY.value - currentY; 
             let newHeight = dragStartHeight.value + deltaY;
 
             const maxHeight = window.innerHeight;
-            const minHeight = 140; // Collapsed height constraint
+            // FIX 1: Matches CSS rule for collapsed height (approx)
+            const minHeight = 130; 
             
             if (newHeight > maxHeight) newHeight = maxHeight;
             if (newHeight < minHeight) newHeight = minHeight;
@@ -1137,14 +1069,12 @@
         
         const onDragEnd = (e) => {
             isDragging.value = false;
-            // Remove inline style to let CSS classes take over transition
             const finalHeight = parseFloat(sidebarRef.value.style.height) || dragStartHeight.value;
             sidebarRef.value.style.height = ''; 
             
             const windowH = window.innerHeight;
             const ratio = finalHeight / windowH;
 
-            // Snap logic based on final position
             if (ratio < 0.35) {
                 infoState.value = 0; // Collapsed
             } else if (ratio < 0.85) {
@@ -1153,16 +1083,14 @@
                 infoState.value = 2; // Full
             }
         };
-        // -----------------------------
 
         const infoStateClass = computed(() => {
-            if (infoState.value === 2) return 'state-full mobile-full'; // Add mobile class mapping
+            if (infoState.value === 2) return 'state-full mobile-full'; 
             if (infoState.value === 1) return 'state-half mobile-half';
             return 'state-collapsed mobile-collapsed';
         });
 
         const sidebarMobileClass = computed(() => {
-            // These classes are used for state management via CSS
             if (infoState.value === 2) return 'mobile-full';
             if (infoState.value === 1) return 'mobile-half';
             return 'mobile-collapsed';
@@ -1187,7 +1115,6 @@
         });
 
         watch(infoState, () => {
-             // Invalidate map size when info state changes (especially landscape)
              setTimeout(() => {
                  if(map) map.invalidateSize();
              }, 350);
@@ -1210,7 +1137,6 @@
               }, 100);
           });
           
-          // Fix map rendering on resize (orientation change)
           const resizeObserver = new ResizeObserver(() => {
              if(map) map.invalidateSize();
           });
@@ -1218,12 +1144,11 @@
 
           setInterval(() => { now.value = new Date(); currentTime.value = now.value.toLocaleTimeString("de-DE"); }, 1000);
           
-          // Start Auto Refresh Loop
           autoRefreshTimer = setInterval(() => {
               if (watchedStations.value.length > 0) {
-                  fetchDepartures(true); // true = silent refresh
+                  fetchDepartures(true);
               }
-          }, 30000); // 30 seconds
+          }, 30000);
 
           const saved = localStorage.getItem('bvg_fav_stations');
           if (saved) { starredStations.value = JSON.parse(saved); }
@@ -1261,7 +1186,6 @@
           }
         };
 
-        // Replaced displayResults to use s1Results/s1Query
         const displayResults = computed(() => {
           if (s1Query.value && s1Results.value.length > 0) { return s1Results.value; } 
           else if (!s1Query.value && starredStations.value.length > 0) { return starredStations.value; }
@@ -1274,23 +1198,12 @@
         });
 
         const onSearchInput = () => {
-            // Deprecated handler if needed, currently replaced by onS1Input
-            // handleSearch(searchQuery, searchResults, searchAbortController);
         };
         
-        // Pass correct abort controllers
-        // Logic change: When typing, if a station was selected, we clear it (because user is modifying text)
         const onS1Input = () => {
-            if (station1.value && s1Query.value !== cleanName(station1.value.name)) {
-                // station1.value = null; // Don't clear immediately, let user refine? 
-                // Actually if they type, it usually implies a new search.
-            }
             handleSearch(s1Query, s1Results, s1AbortController);
         };
         const onS2Input = () => {
-            if (station2.value && s2Query.value !== cleanName(station2.value.name)) {
-                // station2.value = null;
-            }
             handleSearch(s2Query, s2Results, s2AbortController);
         };
 
@@ -1308,7 +1221,6 @@
             abortRef.value = controller;
 
             try {
-              // Use apiBase.value here
               const res = await axios.get(`${apiBase.value}/locations`, { 
                 params: { query: queryRef.value, results: 6, stops: true },
                 signal: controller.signal 
@@ -1323,8 +1235,6 @@
 
         const selectStation = (station) => {
           station1.value = station;
-          // No need to set station2 to null unless desired.
-          // station2.value = null; 
           s1Results.value = [];
           if (infoState.value === 0) { infoState.value = 1; } // Go to Half on selection
           updateMapForStations();
@@ -1334,11 +1244,11 @@
         const setStation = (slot, station) => {
             if (slot === 1) {
                 station1.value = station;
-                s1Query.value = cleanName(station.name); // Fill input
+                s1Query.value = cleanName(station.name);
                 s1Results.value = [];
             } else {
                 station2.value = station;
-                s2Query.value = cleanName(station.name); // Fill input
+                s2Query.value = cleanName(station.name);
                 s2Results.value = [];
             }
             updateMapForStations();
@@ -1350,7 +1260,6 @@
                 station1.value = null;
                 s1Query.value = "";
                 s1Results.value = [];
-                // Clearing main also clears results for main
             } else {
                 station2.value = null;
                 s2Query.value = "";
@@ -1446,7 +1355,6 @@
           stopoverLimit.value = 5;
           isTripLoading.value = true;
           try {
-            // Use apiBase.value here
             const res = await axios.get(`${apiBase.value}/trips/${encodeURIComponent(dep.tripId)}`, { params: { stopovers: true } });
             const allStops = res.data.trip.stopovers;
             const departureTime = new Date(dep.when || dep.plannedWhen);
@@ -1469,7 +1377,6 @@
 
           if (!silent) loading.value = true;
           try {
-            // Use apiBase.value here
             const promises = watchedStations.value.map(station => 
                 axios.get(`${apiBase.value}/stops/${station.id}/departures`, { 
                     params: { duration: duration.value, results: 50 } 
@@ -1508,7 +1415,6 @@
                 if (!station.location) return Promise.resolve([]);
                 const { latitude, longitude } = station.location;
                 const bbox = getBoundingBox(latitude, longitude, 2.0); 
-                // Use apiBase.value here
                 return axios.get(`${apiBase.value}/radar`, {
                     params: {
                         north: bbox.north, west: bbox.west, south: bbox.south, east: bbox.east,
@@ -1548,19 +1454,23 @@
             const activeIds = new Set();
             const validTripIds = new Set(departures.value.map(d => d.tripId));
             
-            // Map DB product names to standard BVG ones if needed for checks
             const mapProduct = (p) => {
                 if(p === 'nationalExpress' || p === 'national') return 'express';
                 if(p === 'regionalExp') return 'regional';
                 return p;
             };
 
-            const isMapRelevant = (prod) => ['bus', 'tram', 'suburban', 'subway', 'regional', 'ferry', 'express', 'regionalExp', 'national', 'nationalExpress'].includes(prod);
+            const isMapRelevant = (prod) => ['bus', 'tram', 'suburban', 'subway', 'regional', 'ferry', 'regionalExp'].includes(prod);
 
             vehicles.forEach(v => {
                 if (!v.location || !v.line) return;
                 if (!validTripIds.has(v.tripId)) return; 
-                if (!isMapRelevant(v.line.product)) return;
+                
+                // FIX 2: Filter out express from map
+                let p = v.line.product;
+                if (p === 'express' || p === 'national' || p === 'nationalExpress') return;
+
+                if (!isMapRelevant(p)) return;
 
                 const tripId = v.tripId;
                 activeIds.add(tripId);
@@ -1611,14 +1521,12 @@
         const startRadarLoop = () => {
             if (radarInterval) clearInterval(radarInterval);
             fetchRadar(); 
-            // CHANGE: 8s (8000ms) to ensure overlap with 12s transition
             radarInterval = setInterval(fetchRadar, 8000); 
         };
 
         const departures = computed(() => {
           return departuresRaw.value
             .filter(d => {
-              // Normalize DB product names to match our filter keys
               let p = d.line.product;
               if (p === 'nationalExpress' || p === 'national') p = 'express';
               if (p === 'regionalExp') p = 'regional';
@@ -1652,7 +1560,6 @@
             const lines = new Set();
             departuresRaw.value.forEach(d => {
                 if (d.line && d.line.name) {
-                    // Check logic needs to be aware of DB products too
                     let p = d.line.product;
                     if (p === 'nationalExpress' || p === 'national') p = 'express';
                     if (p === 'regionalExp') p = 'regional';
@@ -1667,7 +1574,6 @@
         });
 
         const filteredLineList = computed(() => {
-            // No search filter anymore, return all unique lines
             return uniqueLinesList.value;
         });
 
@@ -1684,10 +1590,28 @@
         };
 
         const isDeparted = (dep) => (new Date(dep.when || dep.plannedWhen) - now.value) <= 0;
+
+        // UPDATED: Delay Logic
         const getDelayClass = (d) => {
             if (d.cancelled) return "status-cancel";
-            return d.delay === null ? "status-static" : "status-green";
+            if (d.delay === null) return "status-static";
+            
+            const delaySec = d.delay;
+            const p = d.line.product;
+            const isFern = ['express', 'national', 'nationalExpress'].includes(p);
+            
+            // Fern: > 15 min (900s) RED, > 0 ORANGE
+            if (isFern) {
+                if (delaySec >= 900) return "status-red";
+                if (delaySec > 0) return "status-orange";
+            } else {
+                // Others: > 5 min (300s) RED, > 0 ORANGE
+                if (delaySec >= 300) return "status-red";
+                if (delaySec > 0) return "status-orange";
+            }
+            return "status-green"; // On time or early
         };
+
         const formatTime = (iso) => {
           const diff = (new Date(iso) - now.value) / 60000;
           if (diff <= 0) return "";
@@ -1701,15 +1625,16 @@
           else activeFilters.value.push(t);
         };
         
-        // Helper to map DB product names to our CSS classes
         const getProductClass = (p) => {
              if (p === 'nationalExpress' || p === 'national') return 'product-express';
              if (p === 'regionalExp') return 'product-regional';
              return `product-${p}`;
         };
+
+        // Helper for platform logic (S, U, RE, Fern)
+        const isRail = (p) => ['suburban', 'subway', 'regional', 'regionalExp', 'express', 'national', 'nationalExpress'].includes(p);
         
         const clearSearch = () => {
-          // Changed to clearStation(1) logic essentially
           clearStation(1);
           clearStation(2);
           if (radarInterval) clearInterval(radarInterval);
@@ -1747,7 +1672,8 @@
           isLargeFont, toggleFontSize,
           sidebarRef,
           isDragging, onDragStart, onDragMove, onDragEnd,
-          currentApiName // Exposed for UI
+          currentApiName,
+          isRail // Export helper
         };
       }
     }).mount("#app");
