@@ -108,20 +108,9 @@
       flex-direction: column;
       border-right: 1px solid var(--border-color);
       z-index: 1000;
-      /* Default transition for desktop or when NOT dragging */
-      transition: background-color 0.3s ease, width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      transition: background-color 0.3s ease, width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       overflow: hidden; 
       will-change: height, transform;
-    }
-
-    /* When dragging, we disable transition for instant follow */
-    .sidebar.is-dragging {
-        transition: none !important;
-    }
-    
-    /* When snapping after drag, use a spring-like transition */
-    .sidebar.is-snapping {
-        transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) !important;
     }
 
     .map-container {
@@ -155,8 +144,7 @@
             top: 0; 
             left: 0; 
             width: 100% !important; 
-            /* Height is controlled by JS styles or classes below */
-            max-height: 100%; /* Allow full height */
+            max-height: 100%;
             border-right: none; 
             border-bottom: 1px solid var(--border-color); 
             z-index: 2000; 
@@ -165,32 +153,27 @@
             overflow: hidden !important;
         }
 
-        .sidebar.mobile-collapsed { height: 75px !important; } /* Only Header + Search slightly visible */
+        /* COLLAPSED STATE: 
+           Previously 75px, now increased to ~135px to show Header + Search Bar + Footer 
+           Calculation: Header(~45) + Search(~65) + Footer(~40) - adjustments 
+        */
+        .sidebar.mobile-collapsed { height: 135px !important; } 
+        
         .sidebar.mobile-half { height: 45% !important; }
         .sidebar.mobile-full { 
             height: 100% !important; 
-            border-radius: 0 !important; /* No rounded corners on full screen */
+            border-radius: 0 !important; 
             border-bottom: none !important;
         }
 
         .sidebar-footer-toggle { 
             border-top: 1px solid var(--border-color); 
-            height: 40px; /* Taller touch target */
+            height: 40px; 
             display: flex; 
             align-items: center; 
             justify-content: center;
         }
         
-        /* Drag Handle Indicator */
-        .sidebar-footer-toggle::after {
-            content: '';
-            width: 40px;
-            height: 4px;
-            background-color: var(--border-color);
-            border-radius: 2px;
-            position: absolute;
-        }
-
         /* 强制并排，移除 wrap */
         .modal-filter-row { flex-wrap: nowrap !important; }
     }
@@ -208,8 +191,7 @@
         justify-content: center;
         align-items: center;
         flex-shrink: 0;
-        cursor: grab; /* Indicate draggable */
-        touch-action: none; /* Prevent browser scrolling on header */
+        /* cursor: grab; REMOVED DRAG CURSOR */
     }
     .current-time {
         font-family: 'Roboto Mono', monospace;
@@ -406,8 +388,7 @@
         display: flex; 
         align-items: center; 
         justify-content: center; 
-        cursor: pointer; /* Desktop cursor */
-        cursor: grab; /* Touch indication */
+        cursor: pointer; 
         color: var(--text-muted); 
         transition: background-color 0.2s, color 0.2s; 
         flex-shrink: 0; 
@@ -415,9 +396,7 @@
         z-index: 1002; 
         padding-bottom: env(safe-area-inset-bottom); 
         box-sizing: content-box; 
-        touch-action: none; /* Important for gesture */
     }
-    .sidebar-footer-toggle:active { cursor: grabbing; }
     .sidebar-footer-toggle:hover { background-color: var(--hover-bg); color: var(--bvg-yellow); }
     body.light-mode .sidebar-footer-toggle:hover { color: #d4c800; }
 
@@ -480,7 +459,9 @@
 
 
     /* Map UI */
-    .rss-icon { color: #888; transition: color 0.3s; }
+    /* Update RSS Icon to be yellow */
+    .rss-icon { color: var(--bvg-yellow); transition: color 0.3s; }
+    
     .station-tooltip { background-color: rgba(30, 30, 30, 0.95); border: 1px solid var(--bvg-yellow); color: #fff; font-weight: bold; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); font-size: 12px; padding: 4px 8px; display: flex; align-items: center; gap: 6px; margin-bottom: 0 !important; position: relative; }
     .leaflet-tooltip-top:before { display: none; }
     .station-tooltip::after { content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); width: 2px; height: 15px; background-color: var(--bvg-yellow); z-index: -1; }
@@ -635,9 +616,7 @@
                     </div>
                     
                     <div class="modal-filter-row">
-                         <div class="search-input-wrapper">
-                             <input class="form-control-dark" type="text" placeholder="z.B. M45" v-model="lineFilterSearch">
-                         </div>
+                         <!-- Removed search-input-wrapper for lines as requested -->
                          <div class="filter-group">
                             <button class="type-btn btn-s" :class="{ active: isTypeActive('suburban') }" @click="toggleType('suburban')">S</button>
                             <button class="type-btn btn-u" :class="{ active: isTypeActive('subway') }" @click="toggleType('subway')">U</button>
@@ -680,18 +659,12 @@
         ref="sidebarRef"
         :class="[
             sidebarMobileClass, 
-            { 'full-mode': !showMap, 'led-mode': isLedMode, 'font-large': isLargeFont, 'is-dragging': isDragging, 'is-snapping': isSnapping }
+            { 'full-mode': !showMap, 'led-mode': isLedMode, 'font-large': isLargeFont }
         ]"
-        :style="dragStyle"
     >
       
       <!-- Draggable Header -->
-      <div 
-        class="sidebar-header" 
-        @touchstart.passive="onTouchStart" 
-        @touchmove.passive="onTouchMove" 
-        @touchend="onTouchEnd"
-      >
+      <div class="sidebar-header">
           <div class="current-time">
               {{ currentTime }}
               <i v-if="networkError" class="fas fa-rss ms-2 blink-error" title="Netzwerkfehler / No Connection"></i>
@@ -807,9 +780,6 @@
       <div 
         class="sidebar-footer-toggle" 
         @click="toggleInfoState" 
-        @touchstart.passive="onTouchStart" 
-        @touchmove.passive="onTouchMove" 
-        @touchend="onTouchEnd"
         title="Ansicht ändern"
       >
           <!-- Icon only visible on desktop/large screens, on mobile we use a 'handle' bar via CSS -->
@@ -963,7 +933,6 @@
         
         const departuresRaw = ref([]);
         
-        const lineFilterSearch = ref("");
         const excludedLines = ref(new Set()); 
 
         const loading = ref(false);
@@ -997,90 +966,8 @@
         const searchAbortController = ref(null);
         let radarAbortController = null;
 
-        // --- Touch Logic Variables ---
+        // --- Touch Logic Removed ---
         const sidebarRef = ref(null);
-        const isDragging = ref(false);
-        const isSnapping = ref(false);
-        const dragHeight = ref(null);
-        const startY = ref(0);
-        const startHeight = ref(0);
-
-        const dragStyle = computed(() => {
-            if (!isDragging.value || dragHeight.value === null) return {};
-            return { height: `${dragHeight.value}px` };
-        });
-
-        const onTouchStart = (e) => {
-            // Only enable drag on mobile portrait
-            if (window.innerWidth > 767) return; 
-
-            isDragging.value = true;
-            isSnapping.value = false;
-            startY.value = e.touches[0].clientY;
-            
-            // Get current height
-            if (sidebarRef.value) {
-                startHeight.value = sidebarRef.value.offsetHeight;
-                dragHeight.value = startHeight.value;
-            }
-        };
-
-        const onTouchMove = (e) => {
-            if (!isDragging.value) return;
-            const currentY = e.touches[0].clientY;
-            const deltaY = currentY - startY.value;
-            
-            // On mobile, sidebar is top-aligned but looks like a top-sheet overlay?
-            // Wait, previous CSS says sidebar top:0, left:0. 
-            // So if I drag DOWN, height increases (deltaY is positive).
-            // If I drag UP, height decreases (deltaY is negative).
-            
-            let newHeight = startHeight.value + deltaY;
-            
-            // Limits
-            const maxH = window.innerHeight;
-            const minH = 75; // Collapsed height
-            
-            if (newHeight > maxH) newHeight = maxH;
-            if (newHeight < minH) newHeight = minH;
-            
-            dragHeight.value = newHeight;
-        };
-
-        const onTouchEnd = (e) => {
-            if (!isDragging.value) return;
-            isDragging.value = false;
-            isSnapping.value = true;
-            
-            // Determine nearest state
-            const h = dragHeight.value;
-            const windowH = window.innerHeight;
-            
-            // Thresholds
-            const thresholdCollapsed = 150; 
-            const thresholdFull = windowH * 0.75;
-            
-            if (h < thresholdCollapsed) {
-                infoState.value = 0; // Collapsed
-            } else if (h > thresholdFull) {
-                infoState.value = 2; // Full
-            } else {
-                // Check if closer to half (45%) or others
-                const diffToHalf = Math.abs(h - (windowH * 0.45));
-                const diffToFull = Math.abs(h - windowH);
-                const diffToColl = Math.abs(h - 75);
-                
-                if (diffToFull < diffToHalf && diffToFull < diffToColl) infoState.value = 2;
-                else if (diffToColl < diffToHalf) infoState.value = 0;
-                else infoState.value = 1; // Half
-            }
-
-            dragHeight.value = null; // Clear inline style so class takes over
-            
-            setTimeout(() => {
-                isSnapping.value = false;
-            }, 400);
-        };
 
         // -----------------------------
 
@@ -1115,9 +1002,6 @@
         };
 
         const toggleInfoState = (e) => {
-            // Only toggle on click if NOT dragging (simulated click from tap)
-            if (isDragging.value) return;
-            
             if (infoState.value === 2) { infoState.value = 0; } 
             else if (infoState.value === 0) { infoState.value = 1; } 
             else { infoState.value = 2; }
@@ -1604,9 +1488,8 @@
         });
 
         const filteredLineList = computed(() => {
-            if (!lineFilterSearch.value) return uniqueLinesList.value;
-            const lower = lineFilterSearch.value.toLowerCase();
-            return uniqueLinesList.value.filter(l => l.toLowerCase().includes(lower));
+            // No search filter anymore, return all unique lines
+            return uniqueLinesList.value;
         });
 
         const toggleLineExclusion = (lineName) => {
@@ -1669,7 +1552,8 @@
           isDarkMode, zoomIn, zoomOut,
           infoState, toggleInfoState, infoStateClass, sidebarMobileClass, toggleIcon,
           showSettings, setStation, clearStation, watchedStations,
-          lineFilterSearch, filteredLineList, toggleLineExclusion, excludedLines, resetLineFilters,
+          // Removed lineFilterSearch
+          filteredLineList, toggleLineExclusion, excludedLines, resetLineFilters,
           station1, station2, s1Query, s2Query, s1Results, s2Results, onS1Input, onS2Input,
           showMap, toggleMap, resetStations,
           t, currentLang, toggleLang,
@@ -1677,8 +1561,7 @@
           currentTheme, setTheme, 
           networkError,
           isLargeFont, toggleFontSize,
-          // Touch
-          onTouchStart, onTouchMove, onTouchEnd, isDragging, isSnapping, dragStyle, sidebarRef
+          sidebarRef
         };
       }
     }).mount("#app");
