@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Abfahrtsmonitor Berlin (Final Touch)</title>
+  <title>Abfahrtsmonitor Berlin (Smooth Move)</title>
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -179,7 +179,14 @@
     }
 
     #map { height: 100%; width: 100%; z-index: 1; background-color: var(--bg-body); }
-    .smooth-transition { transition: transform 10s linear; }
+    
+    /* ANIMATION OPTIMIZATION:
+       设置为 12s 线性动画。
+       配合 JS 中 8s 的刷新频率。
+       这样即使 8s 后数据没回来，车辆还会继续移动 4s，避免“急停”。
+    */
+    .smooth-transition { transition: transform 12s linear; }
+    
     .no-transition { transition: none !important; }
 
     /* Header Bar */
@@ -465,12 +472,37 @@
     .station-tooltip { background-color: rgba(30, 30, 30, 0.95); border: 1px solid var(--bvg-yellow); color: #fff; font-weight: bold; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); font-size: 12px; padding: 4px 8px; display: flex; align-items: center; gap: 6px; margin-bottom: 0 !important; position: relative; }
     .leaflet-tooltip-top:before { display: none; }
     .station-tooltip::after { content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); width: 2px; height: 15px; background-color: var(--bvg-yellow); z-index: -1; }
-    .vehicle-popup .leaflet-popup-content-wrapper { background-color: rgba(30, 30, 30, 0.95); border: 1px solid var(--bvg-yellow); border-radius: 4px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.6); color: #fff; }
+    
+    /* POPUP OPTIMIZATION (Vehicle Label Position):
+       减小下方边距和指针高度，让标签紧贴图标。
+    */
+    .vehicle-popup .leaflet-popup-content-wrapper { 
+        background-color: rgba(30, 30, 30, 0.95); 
+        border: 1px solid var(--bvg-yellow); 
+        border-radius: 4px; 
+        padding: 0; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.6); 
+        color: #fff; 
+        margin-bottom: 5px; /* 原来是 20px，改小 */
+        position: relative; 
+        overflow: visible; 
+    }
     .vehicle-popup .leaflet-popup-content { margin: 6px 10px; font-weight: bold; font-size: 12px; line-height: 1.4; text-align: center; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
     .vehicle-popup-badge { font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; font-weight: bold; }
     .vehicle-popup .leaflet-popup-tip-container { display: none; } 
-    .vehicle-popup .leaflet-popup-content-wrapper { margin-bottom: 20px; position: relative; overflow: visible; }
-    .vehicle-popup .leaflet-popup-content-wrapper::after { content: ''; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); width: 2px; height: 20px; background-color: var(--bvg-yellow); }
+    
+    /* 指针（小尾巴）样式调整 */
+    .vehicle-popup .leaflet-popup-content-wrapper::after { 
+        content: ''; 
+        position: absolute; 
+        bottom: -5px; /* 原来是 -20px，改小 */
+        left: 50%; 
+        transform: translateX(-50%); 
+        width: 2px; 
+        height: 5px; /* 原来是 20px，改小 */
+        background-color: var(--bvg-yellow); 
+    }
+    
     .vehicle-popup a.leaflet-popup-close-button { display: none; }
     .station-pos-marker { background-color: var(--bvg-yellow); border: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; box-shadow: 0 0 15px rgba(240, 228, 0, 0.8); box-sizing: border-box; }
     .vehicle-marker-wrapper { position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
@@ -1442,7 +1474,8 @@
         const startRadarLoop = () => {
             if (radarInterval) clearInterval(radarInterval);
             fetchRadar(); 
-            radarInterval = setInterval(fetchRadar, 10000); 
+            // CHANGE: 8s (8000ms) to ensure overlap with 12s transition
+            radarInterval = setInterval(fetchRadar, 8000); 
         };
 
         const departures = computed(() => {
@@ -1512,7 +1545,8 @@
         const formatTime = (iso) => {
           const diff = (new Date(iso) - now.value) / 60000;
           if (diff <= 0) return "";
-          return diff < 1 ? t.value.now : t.value.inMin.replace('{t}', Math.round(diff));
+          if (diff <= 0.34) return t.value.now; // 0-20 seconds (approx 0.333)
+          return t.value.inMin.replace('{t}', Math.ceil(diff));
         };
         const formatAbsTime = (iso) => iso ? new Date(iso).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
         const isTypeActive = (t) => activeFilters.value.includes(t);
