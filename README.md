@@ -6,17 +6,20 @@ A modern, responsive web dashboard designed for real-time monitoring of public t
 ### ♻️ Theme: Repurposing Old Phones into Schedule Displays
 **Don't let your old smartphones collect dust!** This project was specifically designed and optimized to turn any spare smartphone or tablet into a dedicated, real-time smart transit monitor. By opening this dashboard in full-screen on an old device, you can create a permanent public transport timetable for your home, hallway, or office. 
 
-<p align="center">
-  <img src="bspl1.jpg" width="600" alt="Android Landscape Display">
-  <br>
-  <i>Old Android phone in landscape mode displaying the timetable and real-time map (using the <b>Fully Kiosk Browser</b> app).</i>
-</p>
-
-<p align="center">
-  <img src="bspl2.jpg" width="600" alt="iPhone Timetable Display">
-  <br>
-  <i>Old iPhone displaying the departure timetable (using the <b>Kiosker</b> app).</i>
-</p>
+<table align="center" style="border: none; background: none;">
+  <tr style="border: none; background: none;">
+    <td align="center" width="50%" style="border: none;">
+      <img src="bspl1.JPG" width="60%" alt="Android Landscape Display">
+      <br>
+      <i>1. Old Android phone in landscape mode displaying the timetable and real-time map (via the <b>Fully Kiosk Browser</b> app).</i>
+    </td>
+    <td align="center" width="50%" style="border: none;">
+      <img src="bspl2.JPG" width="60%" alt="iPhone Timetable Display">
+      <br>
+      <i>2. Old iPhone displaying the departure timetable (via the <b>Kiosker</b> app).</i>
+    </td>
+  </tr>
+</table>
 
 
 ## Core Features
