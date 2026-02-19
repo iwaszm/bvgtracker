@@ -11,7 +11,7 @@ A modern, responsive web dashboard designed for real-time monitoring of public t
     <td align="center" width="50%" style="border: none;">
       <img src="bspl1.JPG" width="60%" alt="Android Landscape Display">
       <br>
-      <i>1. Old Android phone in landscape mode displaying the timetable and real-time map (via the <b>Fully Kiosk Browser</b> app).</i>
+      <i>1. Old Android phone displaying the timetable and real-time map (via the <b>Fully Kiosk Browser</b> app).</i>
     </td>
     <td align="center" width="50%" style="border: none;">
       <img src="bspl2.JPG" width="60%" alt="iPhone Timetable Display">
