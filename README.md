@@ -2,6 +2,23 @@
 
 A modern, responsive web dashboard designed for real-time monitoring of public transport departures in Berlin. This tool provides a comprehensive view of transit movements, combining temporal schedules with spatial tracking.
 
+
+### ♻️ Theme: Repurposing Old Phones into Schedule Displays
+**Don't let your old smartphones collect dust!** This project was specifically designed and optimized to turn any spare smartphone or tablet into a dedicated, real-time smart transit monitor. By opening this dashboard in full-screen on an old device, you can create a permanent public transport timetable for your home, hallway, or office. 
+
+<p align="center">
+  <img src="bspl1.jpg" width="600" alt="Android Landscape Display">
+  <br>
+  <i>Old Android phone in landscape mode displaying the timetable and real-time map (using the <b>Fully Kiosk Browser</b> app).</i>
+</p>
+
+<p align="center">
+  <img src="bspl2.jpg" width="600" alt="iPhone Timetable Display">
+  <br>
+  <i>Old iPhone displaying the departure timetable (using the <b>Kiosker</b> app).</i>
+</p>
+
+
 ## Core Features
 
 * Vehicle Type Filtering: Custom toggle filters for S-Bahn, U-Bahn, Tram, Bus, Regional trains and Fernzug.
