@@ -184,9 +184,12 @@ import { createUiHandlers } from './ui.js';
             return 'mobile-collapsed';
         });
 
+        // Arrow indicates the *next* toggle direction for the panel
         const toggleIcon = computed(() => {
-            if (infoState.value === 2) return 'fa-angles-up'; 
-            return 'fa-chevron-down'; 
+            // Toggle order: full(2) -> collapsed(0) -> half(1) -> full(2)
+            if (infoState.value === 2) return 'fa-chevron-down'; // will collapse
+            if (infoState.value === 0) return 'fa-chevron-up';   // will expand
+            return 'fa-chevron-up';                               // half -> full
         });
 
         

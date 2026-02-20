@@ -46,7 +46,8 @@ export function createUiHandlers({
     let newHeight = dragStartHeight.value + deltaY;
 
     const maxHeight = windowObj.innerHeight;
-    const minHeight = 130;
+    // Keep in sync with CSS (.sidebar.mobile-collapsed height)
+    const minHeight = 110;
 
     if (newHeight > maxHeight) newHeight = maxHeight;
     if (newHeight < minHeight) newHeight = minHeight;

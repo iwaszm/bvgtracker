@@ -150,7 +150,8 @@
             touch-action: none; 
         }
 
-        .sidebar.mobile-collapsed { height: 130px !important; } 
+        /* Collapsed height should reveal only the header + search (hide the dashboard section) */
+        .sidebar.mobile-collapsed { height: 110px !important; } 
         
         .sidebar.mobile-half { height: 50% !important; }
         .sidebar.mobile-full { 
@@ -389,15 +390,14 @@
     .sidebar-footer-toggle:hover { background-color: var(--hover-bg); }
     .sidebar-footer-toggle:active { cursor: grabbing; }
     
-    .handle-bar {
-        width: 40px;
-        height: 4px; 
-        background-color: #666;
-        border-radius: 2px;
-        transition: background-color 0.3s;
+    /* Toggle arrow in the footer handle */
+    .sidebar-footer-toggle i {
+        font-size: 14px;
+        color: #888;
+        transition: color 0.3s;
     }
-    .sidebar-footer-toggle:hover .handle-bar { background-color: var(--bvg-yellow); }
-    body.light-mode .sidebar-footer-toggle:hover .handle-bar { background-color: #d4c800; }
+    .sidebar-footer-toggle:hover i { color: var(--bvg-yellow); }
+    body.light-mode .sidebar-footer-toggle:hover i { color: #d4c800; }
 
     /* Settings Modal */
     .settings-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 5000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 20px; }
@@ -848,7 +848,7 @@
         @touchmove.stop="onDragMove"
         @touchend.stop="onDragEnd"
       >
-          <div class="handle-bar"></div>
+          <i class="fas" :class="toggleIcon" aria-hidden="true"></i>
       </div>
 
     </div>
