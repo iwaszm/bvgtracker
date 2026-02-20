@@ -953,6 +953,18 @@
     const DARK_TILES = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
     const LIGHT_TILES = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 
+    // --- Pure helpers (kept outside setup; no behavior change) ---
+    function cleanName(name) {
+        if (!name) return "";
+        return name.replace(/\s*\(Berlin\)\s*/gi, "").replace(/,\s*Berlin\s*/gi, "");
+    }
+
+    function getBoundingBox(lat, lon, radiusKm) {
+        const latDelta = radiusKm / 111;
+        const lonDelta = radiusKm / (111 * Math.cos(lat * (Math.PI / 180)));
+        return { north: lat + latDelta, south: lat - latDelta, east: lon + lonDelta, west: lon - lonDelta };
+    }
+
     createApp({
       setup() {
         const currentTime = ref("");
@@ -1279,11 +1291,6 @@
           if (radarInterval) clearInterval(radarInterval);
           if (autoRefreshTimer) clearInterval(autoRefreshTimer);
         });
-
-        const cleanName = (name) => {
-            if (!name) return "";
-            return name.replace(/\s*\(Berlin\)\s*/gi, "").replace(/,\s*Berlin\s*/gi, "");
-        };
 
         const isStarred = (id) => starredStations.value.some(s => s.id === id);
         const toggleStar = (station) => {
@@ -1651,12 +1658,6 @@
           }
         };
 
-        const getBoundingBox = (lat, lon, radiusKm) => {
-            const latDelta = radiusKm / 111; 
-            const lonDelta = radiusKm / (111 * Math.cos(lat * (Math.PI / 180)));
-            return { north: lat + latDelta, south: lat - latDelta, east: lon + lonDelta, west: lon - lonDelta };
-        };
-        
         const fetchRadar = async () => {
             if (watchedStations.value.length === 0) return;
 
