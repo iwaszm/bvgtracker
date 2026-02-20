@@ -14,6 +14,10 @@ import { cleanName, getBoundingBox } from './utils.js';
 
     createApp({
       setup() {
+                // ==============================
+        // State
+        // ==============================
+
         const currentTime = ref("");
         const now = ref(new Date());
         
@@ -56,6 +60,11 @@ import { cleanName, getBoundingBox } from './utils.js';
         const pullOpacity = computed(() => Math.min(pullDistance.value / pullThreshold, 1));
         const pullTranslate = computed(() => Math.min(pullDistance.value, pullThreshold));
 
+        
+        // ==============================
+        // API (BVG) + Network
+        // ==============================
+
         // --- API Failover Logic REMOVED (Only BVG) ---
         const apiEndpoints = API_ENDPOINTS;
         const currentApiIndex = ref(0);
@@ -75,12 +84,22 @@ import { cleanName, getBoundingBox } from './utils.js';
             }
         );
 
+        
+        // ==============================
+        // Derived / Computed
+        // ==============================
+
         const watchedStations = computed(() => {
             const list = [];
             if (station1.value) list.push(station1.value);
             if (station2.value) list.push(station2.value);
             return list;
         });
+
+        
+        // ==============================
+        // Watchers
+        // ==============================
 
         // Combined watcher for Main Search Display vs Individual Settings Inputs
         watch([station1, station2], ([s1, s2]) => {
@@ -229,6 +248,11 @@ import { cleanName, getBoundingBox } from './utils.js';
             return 'fa-chevron-down'; 
         });
 
+        
+        // ==============================
+        // UI: Drag + Pull-to-refresh
+        // ==============================
+
         // --- Pull To Refresh Logic ---
         const onPullStart = (e) => {
             if (infoState.value !== 2) return; // Only in Full Mode
@@ -283,6 +307,11 @@ import { cleanName, getBoundingBox } from './utils.js';
                  if(map) map.invalidateSize();
              }, 350);
         });
+
+        
+        // ==============================
+        // Lifecycle
+        // ==============================
 
         onMounted(() => {
           if (!document.getElementById("map")) return;
@@ -391,6 +420,11 @@ import { cleanName, getBoundingBox } from './utils.js';
         const onS2Input = () => {
             handleSearch(s2Query, s2Results, s2AbortController);
         };
+
+        
+        // ==============================
+        // Search (stations)
+        // ==============================
 
         const handleSearch = (queryRef, resultsRef, abortRef) => {
           if (searchTimeout) clearTimeout(searchTimeout);
@@ -671,6 +705,11 @@ import { cleanName, getBoundingBox } from './utils.js';
         };
 
         const visibleStopovers = computed(() => currentTripStopovers.value.slice(0, stopoverLimit.value));
+
+        
+        // ==============================
+        // Data fetch: Departures + Radar
+        // ==============================
 
         const fetchDepartures = async (silent = false) => {
           if (watchedStations.value.length === 0) {
