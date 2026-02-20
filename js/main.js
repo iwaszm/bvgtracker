@@ -279,40 +279,6 @@ import { createStationHandlers } from './stations.js';
         // ==============================
 
 
-        const stations = createStationHandlers({
-          ref,
-          computed,
-          watch,
-          axios,
-          apiBase,
-          mainSearchQuery,
-          s1Query,
-          s2Query,
-          s1Results,
-          s2Results,
-          s1AbortController,
-          s2AbortController,
-          station1,
-          station2,
-          starredStations,
-          isShowingFavorites,
-          updateMapForStations,
-          fetchDepartures,
-        });
-
-        const isStarred = stations.isStarred;
-        const toggleStar = stations.toggleStar;
-        const showFavorites = stations.showFavorites;
-        const displayResults = stations.displayResults;
-
-        const onMainInput = stations.onMainInput;
-        const onS1Input = stations.onS1Input;
-        const onS2Input = stations.onS2Input;
-
-        const selectStation = stations.selectStation;
-        const setStation = stations.setStation;
-        const clearStation = stations.clearStation;
-        const resetStations = stations.resetStations;
 
         const updateMapForStations = () => {
             if (!map) return;
@@ -585,6 +551,43 @@ import { createStationHandlers } from './stations.js';
         const zoomOut = ui.zoomOut;
 
         const toggleMap = () => ui.toggleMap(showMap);
+
+
+        // Stations: search + favorites (wired after dependencies exist)
+        const stations = createStationHandlers({
+          ref,
+          computed,
+          watch,
+          axios,
+          apiBase,
+          mainSearchQuery,
+          s1Query,
+          s2Query,
+          s1Results,
+          s2Results,
+          s1AbortController,
+          s2AbortController,
+          station1,
+          station2,
+          starredStations,
+          isShowingFavorites,
+          updateMapForStations,
+          fetchDepartures,
+        });
+
+        const isStarred = stations.isStarred;
+        const toggleStar = stations.toggleStar;
+        const showFavorites = stations.showFavorites;
+        const displayResults = stations.displayResults;
+
+        const onMainInput = stations.onMainInput;
+        const onS1Input = stations.onS1Input;
+        const onS2Input = stations.onS2Input;
+
+        const selectStation = stations.selectStation;
+        const setStation = stations.setStation;
+        const clearStation = stations.clearStation;
+        const resetStations = stations.resetStations;
 
 
         const fetchRadar = async () => {
