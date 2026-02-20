@@ -869,7 +869,7 @@ import { createStationHandlers } from './stations.js';
 
         return {
           currentTime, mainSearchQuery, searchQuery, searchResults, departures, loading, duration, 
-          isTypeActive, toggleType, selectStation, onMainInput, onSearchInput, clearSearch,
+          isTypeActive, toggleType, selectStation, onMainInput, clearSearch,
           formatTime, formatAbsTime, getDelayClass, isDeparted, getProductClass,
           onDurationChange: () => fetchDepartures(), expandedTripId, toggleTrip, isTripLoading,
           currentTripStopovers, visibleStopovers, stopoverLimit,
