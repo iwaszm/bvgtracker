@@ -474,6 +474,24 @@
       opacity: 0.85;
     }
 
+    /* Draw a diagonal slash over the clock icon when disabled */
+    .btn-independent { position: relative; }
+    .clock-slash {
+      position: absolute;
+      width: 18px;
+      height: 2px;
+      background: currentColor;
+      opacity: 0.8;
+      transform: rotate(-28deg);
+      border-radius: 2px;
+      pointer-events: none;
+      /* center over icon */
+      left: 50%;
+      top: 50%;
+      margin-left: -9px;
+      margin-top: -1px;
+    }
+
     body.light-mode .mosaic-led-icon { opacity: 0.7; }
     
     .reset-icon-btn { background-color: transparent !important; background: transparent !important; border: none !important; color: var(--text-muted); font-size: 10px; padding: 0 4px; cursor: pointer; transition: color 0.2s; display: flex; align-items: center; justify-content: center; appearance: none; -webkit-appearance: none; }
@@ -632,7 +650,8 @@
                             </button>
                         </div>
                         <button class="btn-independent" :class="{ active: !isTimebarHidden }" @click="toggleTimebar" title="Time Bar">
-                            <i class="fas" :class="isTimebarHidden ? 'fa-clock-slash' : 'fa-clock'"></i>
+                            <i class="fas" :class="isTimebarHidden ? 'fa-clock' : 'fa-clock'"></i>
+                            <span v-if="isTimebarHidden" class="clock-slash" aria-hidden="true"></span>
                         </button>
                         <button class="btn-independent" @click="toggleLang" title="Sprache">
                             <span style="font-weight: 900; font-size: 11px;">{{ currentLang.toUpperCase() }}</span>
