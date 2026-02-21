@@ -591,7 +591,7 @@ import { createStationHandlers } from './stations.js';
           isShowingFavorites,
           updateMapForStations,
           fetchDepartures,
-          setUserLocation: ({ latitude, longitude, accuracy }) => {
+          setUserLocation: ({ latitude, longitude }) => {
             try {
               if (!map) return;
 
@@ -605,19 +605,6 @@ import { createStationHandlers } from './stations.js';
                 window.__userLocationMarker = L.marker([latitude, longitude], { icon }).addTo(map);
               } else {
                 window.__userLocationMarker.setLatLng([latitude, longitude]);
-              }
-
-              if (accuracy && !window.__userLocationCircle) {
-                window.__userLocationCircle = L.circle([latitude, longitude], {
-                  radius: accuracy,
-                  color: '#3b82f6',
-                  fillColor: '#3b82f6',
-                  fillOpacity: 0.08,
-                  weight: 1,
-                }).addTo(map);
-              } else if (accuracy && window.__userLocationCircle) {
-                window.__userLocationCircle.setLatLng([latitude, longitude]);
-                window.__userLocationCircle.setRadius(accuracy);
               }
             } catch (e) {
               console.warn('Failed to set user location on map', e);

@@ -173,7 +173,8 @@ export function createStationHandlers({
       },
     });
     const stops = (res.data || []).filter((s) => s.type === 'stop');
-    nearbyStations.value = stops;
+    // Only show the closest few in the dropdown
+    nearbyStations.value = stops.slice(0, 3);
   };
 
   const onLocateClick = async () => {
