@@ -316,7 +316,7 @@
         flex-grow: 1; 
         overflow-y: auto; 
         padding: 10px; 
-        padding-right: 16px; /* leave room for scrollbar (web) */
+        padding-right: 8px; /* leave small room for scrollbar (web) */
         overflow-x: hidden; 
         background-color: var(--bg-sidebar); 
         min-height: 0; 
@@ -331,25 +331,20 @@
     }
 
     /* Stops dashboard (when no station selected) */
-    .stops-dashboard { padding: 6px 2px 14px; padding-right: 8px; }
-    /* Segmented toggle (Nearby/Favorites) */
+    .stops-dashboard { padding: 6px 2px 14px; padding-right: 0; }
     .stops-dashboard-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6px;
+      gap: 8px;
       margin: 2px 0 10px;
-      padding: 6px;
-      border-radius: 10px;
-      border: 1px solid var(--border-color);
-      background: rgba(255,255,255,0.06);
     }
     .stops-tab {
-      border: 1px solid transparent;
-      background: transparent;
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
       color: var(--text-muted);
-      border-radius: 8px;
-      padding: 10px 10px;
-      font-weight: 900;
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-weight: 800;
       font-size: 12px;
       cursor: pointer;
     }
@@ -479,9 +474,28 @@
     .stopover-container { background-color: rgba(0, 0, 0, 0.2); padding: 8px 12px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
     body.light-mode .stopover-container { background-color: rgba(0, 0, 0, 0.03); border-top: 1px solid rgba(0, 0, 0, 0.05); }
     .stopover-item { display: flex; align-items: center; padding: 3px 0; min-width: 0; }
-    .stopover-time { font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; width: 45px; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+    .stopover-time { font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; width: 70px; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
     .stopover-node { width: 6px; height: 6px; border-radius: 50%; background-color: #aaa; margin: 0 10px; flex-shrink: 0; }
-    .stopover-name { font-size: 12px; color: var(--text-sub); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stopover-node.node-future { background-color: #555; }
+    /* next stop (blinking) should stay bright even if it is future */
+    .stopover-node.blink { background-color: #aaa; }
+    .blink { animation: blink 1.1s infinite; }
+    @keyframes blink { 0%, 50%, 100% { opacity: 1; } 60%, 90% { opacity: 0.2; } }
+
+    .stopover-name { font-size: 12px; color: var(--text-sub); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:flex; align-items:center; gap:6px; }
+
+    .watched-triangle {
+      width: 0;
+      height: 0;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 7px solid var(--text-muted);
+      opacity: 0.9;
+      flex-shrink: 0;
+      margin-left: 2px;
+      transform: rotate(180deg);
+      transform-origin: center;
+    }
     .weiter-btn { width: 100%; background: none; border: 1px dashed var(--border-color); color: var(--text-muted); font-size: 11px; padding: 4px; margin-top: 8px; border-radius: 4px; }
     .weiter-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
 
@@ -700,14 +714,16 @@
     .led-mode .current-time { font-family: 'VT323', monospace !important; color: #ffaa00 !important; font-size: 24px !important; letter-spacing: 2px; text-shadow: 0 0 5px rgba(255, 170, 0, 0.5); }
     .led-mode .form-control-dark { background-color: #000 !important; border-color: #555 !important; color: #ffaa00 !important; font-family: 'VT323', monospace !important; font-size: 18px !important; letter-spacing: 1px; }
     .led-mode .settings-btn { background-color: #000 !important; border-color: #555 !important; color: #ffaa00 !important; }
-    .led-mode .stops-dashboard-tabs { background: #000 !important; border-color: #333 !important; }
-    .led-mode .stops-tab { background: transparent !important; color: #cc8800 !important; font-family: 'VT323', monospace !important; font-size: 18px !important; letter-spacing: 1px; }
-    .led-mode .stops-tab.active { background: #111 !important; color: #ffaa00 !important; border: 1px solid #ffaa00 !important; box-shadow: 0 0 6px rgba(255,170,0,0.25); }
+    .led-mode .stops-tab { background: #000 !important; border-color: #555 !important; color: #ffaa00 !important; font-family: 'VT323', monospace !important; font-size: 18px !important; letter-spacing: 1px; }
+    .led-mode .stops-tab.active { border-color: #ffaa00 !important; box-shadow: 0 0 6px rgba(255,170,0,0.25); }
     .led-mode .stops-dashboard-item { background: #000 !important; border-color: #333 !important; }
     .led-mode .stops-name { font-family: 'VT323', monospace !important; color: #ffaa00 !important; font-size: 18px !important; text-transform: uppercase; letter-spacing: 0.5px; }
-    .led-mode .stops-dashboard .star-btn { color: #ffaa00 !important; }
-    .led-mode .stops-dashboard .star-btn .fa-star { filter: drop-shadow(0 0 4px rgba(255,170,0,0.35)); }
+    .led-mode .mini-action-btn { background: #000 !important; border-color: #555 !important; color: #ffaa00 !important; }
+    .led-mode .mini-action-btn:hover { background: #111 !important; }
+    .led-mode .mini-action-btn .fa-star { filter: drop-shadow(0 0 4px rgba(255,170,0,0.35)); }
     .led-mode .bus-card { background-color: #000000 !important; border-bottom: 1px dashed #333; border-left: none !important; border-radius: 0 !important; margin-bottom: 0; box-shadow: none; }
+    .led-mode .bus-card.cancelled { opacity: 0.65; }
+    .led-mode .bus-card.cancelled .line-badge { background-color: transparent !important; color: #ffaa00 !important; }
     .led-mode .bus-card:hover { background-color: #111 !important; }
     .led-mode .dest-text { font-family: 'VT323', monospace !important; font-size: 20px !important; color: #ffaa00 !important; text-transform: uppercase; letter-spacing: 1px; }
     .led-mode .line-badge { background-color: transparent !important; color: #ffaa00 !important; border: 1px solid #ffaa00; font-family: 'VT323', monospace !important; font-size: 18px !important; border-radius: 2px; padding: 0 4px; }
@@ -721,6 +737,9 @@
     .led-mode .stopover-container { background-color: #111; border-top: 1px dashed #333; }
     .led-mode .stopover-time, .led-mode .stopover-name { font-family: 'VT323', monospace !important; color: #ffaa00 !important; font-size: 18px !important; text-transform: uppercase; }
     .led-mode .stopover-node { background-color: #ffaa00 !important; box-shadow: 0 0 6px rgba(255,170,0,0.35); }
+    .led-mode .stopover-node.node-future { background-color: #553300 !important; box-shadow: none; }
+    .led-mode .stopover-node.blink { background-color: #ffaa00 !important; box-shadow: 0 0 6px rgba(255,170,0,0.35); }
+    .led-mode .watched-triangle { border-left-color: #ffaa00; filter: drop-shadow(0 0 4px rgba(255,170,0,0.35)); }
     .led-mode .weiter-btn { border-color: #ffaa00 !important; color: #ffaa00 !important; font-family: 'VT323', monospace !important; font-size: 18px !important; letter-spacing: 1px; }
     .led-mode .weiter-btn:hover { background-color: #111 !important; }
 
@@ -1021,7 +1040,7 @@
                 <div class="stops-name">{{ cleanName(s.name) }}</div>
                 <div class="stops-meta">
                   <span v-if="typeof s.distance === 'number'" style="margin-right:8px;">{{ Math.round(s.distance) }} m</span>
-                  <button class="star-btn" @click.stop="toggleStar(s)" :title="t.favorites">
+                  <button class="mini-action-btn" @click.stop="toggleStar(s)" :title="t.favorites">
                     <i class="fas fa-star" :style="{ color: isStarred(s.id) ? 'var(--bvg-yellow)' : 'var(--text-muted)' }"></i>
                   </button>
                 </div>
@@ -1037,7 +1056,7 @@
               <div class="stops-dashboard-item" v-for="s in starredStations" :key="s.id">
                 <div class="stops-name" @click="selectStation(s)">{{ cleanName(s.name) }}</div>
                 <div class="stops-meta">
-                  <button class="star-btn" @click.stop="toggleStar(s)" :title="t.favorites">
+                  <button class="mini-action-btn" @click.stop="toggleStar(s)" :title="t.favorites">
                     <i class="fas fa-star" style="color: var(--bvg-yellow);"></i>
                   </button>
                 </div>
@@ -1098,10 +1117,13 @@
                 <div class="spinner-border spinner-border-sm text-secondary"></div>
              </div>
              <div v-else>
-                <div class="stopover-item" v-for="stop in visibleStopovers" :key="stop.stop.id">
-                   <div class="stopover-time">{{ formatAbsTime(stop.arrival || stop.plannedArrival || stop.departure) }}</div>
-                   <div class="stopover-node"></div>
-                   <div class="stopover-name">{{ cleanName(stop.stop.name) }}</div>
+                <div class="stopover-item" v-for="it in stopoverDisplayStops" :key="it.stop.stop.id">
+                   <div class="stopover-time">{{ formatPlannedWithDelay(it.stop) }}</div>
+                   <div class="stopover-node" :class="{ blink: it.isBlink, 'node-future': it.isFuture }"></div>
+                   <div class="stopover-name">
+                     {{ cleanName(it.stop.stop.name) }}
+                     <span v-if="it.isWatched" class="watched-triangle" aria-hidden="true"></span>
+                   </div>
                 </div>
                 <button v-if="currentTripStopovers.length > stopoverLimit" class="weiter-btn" @click.stop="stopoverLimit += 5">{{ t.loadMore }}</button>
              </div>

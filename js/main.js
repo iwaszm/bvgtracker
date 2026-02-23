@@ -406,14 +406,10 @@ import { createStationHandlers } from './stations.js';
           isTripLoading.value = true;
           try {
             const res = await axios.get(`${apiBase.value}/trips/${encodeURIComponent(dep.tripId)}`, { params: { stopovers: true } });
-            const allStops = res.data.trip.stopovers;
-            const departureTime = new Date(dep.when || dep.plannedWhen);
+            const allStops = res.data.trip.stopovers || [];
+            // Keep full stopover list (we will slice based on vehicle progress in computed)
+            currentTripStopovers.value = allStops.filter(stop => stop && stop.stop && stop.stop.id);
 
-            currentTripStopovers.value = allStops.filter(stop => {
-               const sTime = stop.arrival || stop.plannedArrival || stop.departure || stop.plannedDeparture;
-               if (!sTime) return false;
-               return new Date(sTime) > departureTime;
-            });
           } catch (e) { console.error(e); } finally { isTripLoading.value = false; }
         };
 
@@ -506,7 +502,68 @@ import { createStationHandlers } from './stations.js';
             }
         };
 
-        const visibleStopovers = computed(() => currentTripStopovers.value.slice(0, stopoverLimit.value));
+        const getStopPlannedTime = (stop) => {
+          return stop.plannedArrival || stop.plannedDeparture || stop.arrival || stop.departure || null;
+        };
+
+        const getStopDelaySec = (stop) => {
+          if (typeof stop.arrivalDelay === 'number') return stop.arrivalDelay;
+          if (typeof stop.departureDelay === 'number') return stop.departureDelay;
+
+          const planned = stop.plannedArrival || stop.plannedDeparture;
+          const realtime = stop.arrival || stop.departure;
+          if (planned && realtime) {
+            return Math.round((new Date(realtime) - new Date(planned)) / 1000);
+          }
+          return 0;
+        };
+
+        const formatPlannedWithDelay = (stop) => {
+          const planned = getStopPlannedTime(stop);
+          if (!planned) return '';
+          const abs = formatAbsTime(planned);
+          const d = getStopDelaySec(stop);
+          if (!d) return abs;
+          const min = Math.round(d / 60);
+          const sign = min > 0 ? '+' : '';
+          return `${abs} ${sign}${min}`;
+        };
+
+        const isWatchedStop = (stopId) => {
+          return !!(
+            (station1.value && station1.value.id === stopId) ||
+            (station2.value && station2.value.id === stopId)
+          );
+        };
+
+        const stopoverDisplayStops = computed(() => {
+          const list = currentTripStopovers.value || [];
+          if (list.length === 0) return [];
+
+          // find last passed stop (by realtime or planned)
+          const nowTs = now.value.getTime();
+          let lastPassed = -1;
+          for (let i = 0; i < list.length; i++) {
+            const st = list[i];
+            const t = st.departure || st.arrival || st.plannedDeparture || st.plannedArrival;
+            if (!t) continue;
+            if (new Date(t).getTime() <= nowTs) lastPassed = i;
+          }
+
+          const startIdx = Math.max(0, lastPassed);
+          const sliced = list.slice(startIdx);
+
+          // Blink the next stop node (vehicle is heading towards it)
+          const blinkIdx = Math.min(1, Math.max(0, sliced.length - 1));
+
+          return sliced.slice(0, stopoverLimit.value).map((s, idx) => ({
+            stop: s,
+            idx,
+            isBlink: idx === blinkIdx,
+            isWatched: isWatchedStop(s.stop.id),
+            isFuture: idx > 0,
+          }));
+        });
 
         
         // ==============================
@@ -971,7 +1028,7 @@ import { createStationHandlers } from './stations.js';
           isTypeActive, toggleType, selectStation, onMainInput, clearSearch,
           formatTime, formatAbsTime, getDelayClass, isDeparted, getProductClass,
           onDurationChange: () => fetchDepartures(), expandedTripId, toggleTrip, isTripLoading,
-          currentTripStopovers, visibleStopovers, stopoverLimit,
+          currentTripStopovers, stopoverDisplayStops, stopoverLimit, formatPlannedWithDelay, isWatchedStop,
           starredStations, isStarred, toggleStar,
           isShowingFavorites, showFavorites,
           isMainDropdownVisible, displaySearchResults, displayFavoriteResults, displayNearbyResults,
