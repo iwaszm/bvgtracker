@@ -69,15 +69,7 @@ export function createStationHandlers({
       isShowingFavorites.value = true;
     }
 
-    // If geolocation has been enabled, refresh nearby stops so the dropdown shows
-    // favorites + all stops within 500m when the user is about to type.
-    if (!mainSearchQuery.value && isGeoEnabled.value && lastUserLocation.value) {
-      try {
-        await fetchNearbyStations(lastUserLocation.value);
-      } catch (e) {
-        // keep silent; dropdown will still show favorites
-      }
-    }
+    // Note: Search dropdown no longer shows favorites/nearby (dashboard handles that).
   };
 
   const isLocating = ref(false);
@@ -98,26 +90,11 @@ export function createStationHandlers({
     return [];
   });
 
-  const displayFavoriteResults = computed(() => {
-    if (!mainSearchQuery.value && isMainDropdownOpen.value && starredStations.value.length > 0) {
-      return starredStations.value;
-    }
-    return [];
-  });
-
-  const displayNearbyResults = computed(() => {
-    if (!mainSearchQuery.value && isMainDropdownOpen.value && nearbyStations.value.length > 0) {
-      return nearbyStations.value;
-    }
-    return [];
-  });
+  const displayFavoriteResults = computed(() => []);
+  const displayNearbyResults = computed(() => []);
 
   const isMainDropdownVisible = computed(() => {
-    return (
-      displaySearchResults.value.length > 0 ||
-      displayFavoriteResults.value.length > 0 ||
-      displayNearbyResults.value.length > 0
-    );
+    return displaySearchResults.value.length > 0;
   });
 
   watch(mainSearchQuery, (newVal) => {
@@ -298,9 +275,41 @@ export function createStationHandlers({
     fetchDepartures();
   };
 
-  const refreshNearby = async () => {
-    if (!isGeoEnabled.value || !lastUserLocation.value) return;
-    await fetchNearbyStations(lastUserLocation.value);
+  const enableGeolocation = async () => {
+    if (!('geolocation' in navigator)) {
+      console.warn('Geolocation not available');
+      return;
+    }
+
+    const pos = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 8000,
+        maximumAge: 30_000,
+      });
+    });
+
+    const latitude = pos.coords.latitude;
+    const longitude = pos.coords.longitude;
+
+    isGeoEnabled.value = true;
+    lastUserLocation.value = { latitude, longitude, ts: Date.now() };
+
+    if (typeof setUserLocation === 'function') {
+      setUserLocation({ latitude, longitude });
+    }
+  };
+
+  const refreshNearby = async ({ ensureEnabled = false } = {}) => {
+    try {
+      if (ensureEnabled && !isGeoEnabled.value) {
+        await enableGeolocation();
+      }
+      if (!isGeoEnabled.value || !lastUserLocation.value) return;
+      await fetchNearbyStations(lastUserLocation.value);
+    } catch (e) {
+      console.warn('Failed to refresh nearby stops', e);
+    }
   };
 
   return {

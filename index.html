@@ -911,9 +911,7 @@
                 @focus="onMainFocus"
                 @blur="onMainBlur"
               />
-              <button @click.prevent="onLocateClick" class="input-action-btn locate-btn" title="Locate">
-                <i class="fas fa-location-crosshairs"></i>
-              </button>
+              <!-- locate button moved to dashboard (In der Nähe tab) -->
               <button v-if="mainSearchQuery" @click="resetStations()" class="input-action-btn clear-btn">
                 <i class="fas fa-times"></i>
               </button>
@@ -945,48 +943,7 @@
             </div>
           </template>
 
-          <!-- Favorites + Nearby when empty query -->
-          <template v-else>
-            <div v-if="displayFavoriteResults.length > 0" class="fav-header">
-              <i class="fas fa-star me-2"></i>{{ t.favorites }}
-            </div>
-            <div
-              class="search-item"
-              v-for="station in displayFavoriteResults"
-              :key="station.id"
-              @click="selectStation(station)"
-            >
-              <div><i class="fas fa-map-marker-alt me-2" style="opacity: 0.6"></i>{{ cleanName(station.name) }}</div>
-              <button 
-                class="star-btn" 
-                :class="{ 'starred': isStarred(station.id) }" 
-                @click.stop="toggleStar(station)"
-                :title="t.favorites"
-              >
-                <i class="fas fa-star"></i>
-              </button>
-            </div>
-
-            <div v-if="displayNearbyResults.length > 0" class="fav-header" style="margin-top:6px;">
-              <i class="fas fa-location-dot me-2"></i>Nearby
-            </div>
-            <div
-              class="search-item"
-              v-for="station in displayNearbyResults"
-              :key="station.id"
-              @click="selectStation(station)"
-            >
-              <div><i class="fas fa-map-marker-alt me-2" style="opacity: 0.6"></i>{{ cleanName(station.name) }}</div>
-              <button 
-                class="star-btn" 
-                :class="{ 'starred': isStarred(station.id) }" 
-                @click.stop="toggleStar(station)"
-                :title="t.favorites"
-              >
-                <i class="fas fa-star"></i>
-              </button>
-            </div>
-          </template>
+          <!-- Favorites/Nearby moved to dashboard -->
         </div>
       </div>
 
@@ -1016,7 +973,7 @@
         <!-- Dashboard: show Nearby/Favorites stops when no station is selected -->
         <div v-else-if="!station1 && !station2" class="stops-dashboard">
           <div class="stops-dashboard-tabs">
-            <button class="stops-tab" :class="{ active: dashboardStopsTab === 'nearby' }" @click="dashboardStopsTab='nearby'; refreshNearby()">In der Nähe</button>
+            <button class="stops-tab" :class="{ active: dashboardStopsTab === 'nearby' }" @click="dashboardStopsTab='nearby'; refreshNearby({ ensureEnabled: true })">In der Nähe</button>
             <button class="stops-tab" :class="{ active: dashboardStopsTab === 'favorites' }" @click="dashboardStopsTab='favorites'">Favoriten</button>
           </div>
 

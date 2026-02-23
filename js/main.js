@@ -141,7 +141,7 @@ import { createStationHandlers } from './stations.js';
         const isShowingFavorites = ref(false);
 
         // Dashboard (no station selected) tabs
-        const dashboardStopsTab = ref('nearby'); // 'nearby' | 'favorites'
+        const dashboardStopsTab = ref('favorites'); // 'nearby' | 'favorites'
 
         
         const currentTheme = ref('dark'); 
@@ -626,7 +626,6 @@ import { createStationHandlers } from './stations.js';
 
         const onMainFocus = stations.onMainFocus;
         const onMainBlur = stations.onMainBlur;
-        const onLocateClick = stations.onLocateClick;
 
         const isMainDropdownVisible = stations.isMainDropdownVisible;
         const displaySearchResults = stations.displaySearchResults;
@@ -976,7 +975,7 @@ import { createStationHandlers } from './stations.js';
           starredStations, isStarred, toggleStar,
           isShowingFavorites, showFavorites,
           isMainDropdownVisible, displaySearchResults, displayFavoriteResults, displayNearbyResults,
-          onMainFocus, onMainBlur, onLocateClick,
+          onMainFocus, onMainBlur,
           nearbyStations, isGeoEnabled, refreshNearby,
           dashboardStopsTab,
           isRadarActive, radarError, cleanName,
