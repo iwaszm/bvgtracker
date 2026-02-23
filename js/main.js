@@ -794,11 +794,28 @@ import { createStationHandlers } from './stations.js';
                 const badgeStyle = `background-color: ${color}; color: white; padding: 2px 6px; border-radius: 4px; display: inline-block; line-height: 1.2; font-weight: 800;`;
                 const popupContent = `<div style="display: flex; align-items: center; gap: 8px;"><span class="vehicle-popup-badge" style="${badgeStyle}">${v.line.name}</span> <span>${cleanName(v.direction)}</span></div>`;
 
+                // Direction: derive bearing from last 2 frames (fallback: none)
+                let deg = null;
+                if (polylinePoints.length >= 2) {
+                  const a = polylinePoints[polylinePoints.length - 2];
+                  const b = polylinePoints[polylinePoints.length - 1];
+                  const lat1 = a[0] * Math.PI / 180;
+                  const lat2 = b[0] * Math.PI / 180;
+                  const dLon = (b[1] - a[1]) * Math.PI / 180;
+                  const y = Math.sin(dLon) * Math.cos(lat2);
+                  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+                  deg = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+                }
+                const dirHtml = (deg === null) ? '' : `<div class="vehicle-dir" style="transform: translate(-50%, -50%) rotate(${deg}deg) translateY(-18px);"></div>`;
+                const html = `<div class="vehicle-marker-wrapper">${dirHtml}<div class="vehicle-marker ${productClass}">${label}</div></div>`;
+                const icon = L.divIcon({ className: 'smooth-transition', html: html, iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16] });
+
                 if (vehicleMarkers[tripId]) {
                     const marker = vehicleMarkers[tripId];
                     const newLatLng = L.latLng(v.location.latitude, v.location.longitude);
                     if (marker.getLatLng().distanceTo(newLatLng) > 1) { marker.setLatLng(newLatLng); }
                     marker.setPopupContent(popupContent);
+                    marker.setIcon(icon);
                     // Update click listener just in case
                     marker.off('click').on('click', (e) => {
                         L.DomEvent.stopPropagation(e); // Stop propagation so map click doesn't clear route
@@ -806,21 +823,6 @@ import { createStationHandlers } from './stations.js';
                         marker.openPopup(); // Force popup open
                     });
                 } else {
-                    // Direction: derive bearing from last 2 frames (fallback: none)
-                    let deg = null;
-                    if (polylinePoints.length >= 2) {
-                      const a = polylinePoints[polylinePoints.length - 2];
-                      const b = polylinePoints[polylinePoints.length - 1];
-                      const lat1 = a[0] * Math.PI / 180;
-                      const lat2 = b[0] * Math.PI / 180;
-                      const dLon = (b[1] - a[1]) * Math.PI / 180;
-                      const y = Math.sin(dLon) * Math.cos(lat2);
-                      const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-                      deg = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-                    }
-                    const dirHtml = (deg === null) ? '' : `<div class="vehicle-dir" style="transform: translate(-50%, -50%) rotate(${deg}deg) translateY(-18px);"></div>`;
-                    const html = `<div class="vehicle-marker-wrapper">${dirHtml}<div class="vehicle-marker ${productClass}">${label}</div></div>`;
-                    const icon = L.divIcon({ className: 'smooth-transition', html: html, iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16] });
                     const marker = L.marker([v.location.latitude, v.location.longitude], { icon: icon })
                      .addTo(map)
                      .bindPopup(popupContent, { className: 'vehicle-popup', offset: [0, -2], closeButton: false });
