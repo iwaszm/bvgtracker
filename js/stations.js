@@ -28,6 +28,8 @@ export function createStationHandlers({
   // ------------------------------
   const isMainDropdownOpen = ref(false);
   const nearbyStations = ref([]);
+  const isGeoEnabled = ref(false);
+  const lastUserLocation = ref(null); // { latitude, longitude, ts }
 
   const openMainDropdown = () => {
     isMainDropdownOpen.value = true;
@@ -60,10 +62,21 @@ export function createStationHandlers({
   };
 
   // Main search focus/blur
-  const onMainFocus = () => {
+  const onMainFocus = async () => {
     openMainDropdown();
+
     if (!mainSearchQuery.value && starredStations.value.length > 0) {
       isShowingFavorites.value = true;
+    }
+
+    // If geolocation has been enabled, refresh nearby stops so the dropdown shows
+    // favorites + all stops within 500m when the user is about to type.
+    if (!mainSearchQuery.value && isGeoEnabled.value && lastUserLocation.value) {
+      try {
+        await fetchNearbyStations(lastUserLocation.value);
+      } catch (e) {
+        // keep silent; dropdown will still show favorites
+      }
     }
   };
 
@@ -172,13 +185,21 @@ export function createStationHandlers({
       params: {
         latitude,
         longitude,
-        results: 10,
+        results: 80,
         stops: true,
+        distance: 500,
       },
     });
-    const stops = (res.data || []).filter((s) => s.type === 'stop');
-    // Only show the closest few in the dropdown
-    nearbyStations.value = stops.slice(0, 3);
+
+    let stops = (res.data || []).filter((s) => s.type === 'stop');
+
+    // If the API returns a distance field, filter defensively.
+    stops = stops.filter((s) => {
+      const d = typeof s.distance === 'number' ? s.distance : null;
+      return d === null ? true : d <= 500;
+    });
+
+    nearbyStations.value = stops;
   };
 
   const onLocateClick = async () => {
@@ -201,6 +222,9 @@ export function createStationHandlers({
 
       const latitude = pos.coords.latitude;
       const longitude = pos.coords.longitude;
+
+      isGeoEnabled.value = true;
+      lastUserLocation.value = { latitude, longitude, ts: Date.now() };
 
       if (typeof setUserLocation === 'function') {
         setUserLocation({ latitude, longitude });
