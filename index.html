@@ -275,7 +275,12 @@
         color: var(--ice-text) !important; 
         border: 1px solid var(--ice-border); 
         box-shadow: 0 0 5px rgba(255,255,255,0.2);
-    } 
+    }
+
+    /* Terminal toggle button (same size as type filters) */
+    .type-btn.btn-terminal { font-weight: 900; letter-spacing: -0.5px; }
+    .type-btn.btn-terminal.disabled { opacity: 0.18; cursor: not-allowed; transform: none !important; }
+    .type-btn.btn-terminal.disabled:hover { opacity: 0.18; transform: none !important; }
 
     input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 8px 0; }
     input[type=range]:focus { outline: none; }
@@ -774,6 +779,14 @@
                             <button class="type-btn btn-re" :class="{ active: isTypeActive('regional') }" @click="toggleType('regional')">RE</button>
                             <button class="type-btn btn-fern" :class="{ active: isTypeActive('express') }" @click="toggleType('express')">Fern</button>
                          </div>
+                         <button
+                           class="type-btn btn-terminal"
+                           :class="{ active: terminalFilterEnabled, disabled: !terminalFilterAvailable }"
+                           @click="terminalFilterAvailable && (isTerminalFilterActive = !isTerminalFilterActive)"
+                           :title="terminalFilterAvailable ? 'Terminal' : 'Terminal (max 4 lines)'"
+                         >
+                           T
+                         </button>
                     </div>
 
                     <div class="line-filter-list">

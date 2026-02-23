@@ -773,9 +773,19 @@ import { createStationHandlers } from './stations.js';
             radarInterval = setInterval(fetchRadar, 8000); 
         };
 
-        const terminalFilterEnabled = computed(() => {
-          // Only enable terminal filter UI/logic when there are <= 4 lines in the settings list.
+        const isTerminalFilterActive = ref(false);
+
+        const terminalFilterAvailable = computed(() => {
+          // Only allow terminal filter when there are <= 4 lines in the settings list.
           return filteredLineList.value.length > 0 && filteredLineList.value.length <= 4;
+        });
+
+        const terminalFilterEnabled = computed(() => {
+          return terminalFilterAvailable.value && isTerminalFilterActive.value;
+        });
+
+        watch(terminalFilterAvailable, (ok) => {
+          if (!ok) isTerminalFilterActive.value = false;
         });
 
         const terminalsByLine = computed(() => {
@@ -972,7 +982,7 @@ import { createStationHandlers } from './stations.js';
           infoState, toggleInfoState, infoStateClass, sidebarMobileClass, toggleIcon,
           showSettings, setStation, clearStation, watchedStations,
           filteredLineList, toggleLineExclusion, excludedLines, resetLineFilters,
-          terminalFilterEnabled, terminalsByLine, isTerminalExcluded, toggleTerminalExclusion,
+          isTerminalFilterActive, terminalFilterAvailable, terminalFilterEnabled, terminalsByLine, isTerminalExcluded, toggleTerminalExclusion,
           station1, station2, s1Query, s2Query, s1Results, s2Results, onS1Input, onS2Input,
           showMap, toggleMap, resetStations,
           t, currentLang, toggleLang,
