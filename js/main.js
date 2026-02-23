@@ -529,7 +529,14 @@ import { createStationHandlers } from './stations.js';
           return `${abs} ${sign}${min}`;
         };
 
-        const stopoverDisplayItems = computed(() => {
+        const isWatchedStop = (stopId) => {
+          return !!(
+            (station1.value && station1.value.id === stopId) ||
+            (station2.value && station2.value.id === stopId)
+          );
+        };
+
+        const stopoverDisplayStops = computed(() => {
           const list = currentTripStopovers.value || [];
           if (list.length === 0) return [];
 
@@ -546,43 +553,15 @@ import { createStationHandlers } from './stations.js';
           const startIdx = Math.max(0, lastPassed);
           const sliced = list.slice(startIdx);
 
-          // decide marker: on stop briefly after pass, else between passed and next
-          let markerMode = 'on'; // 'on' | 'between'
-          let markerIdxInSliced = 0;
-          if (lastPassed < 0) {
-            markerMode = 'on';
-            markerIdxInSliced = 0;
-          } else {
-            const passed = list[lastPassed];
-            const passedTs = new Date(passed.departure || passed.arrival || passed.plannedDeparture || passed.plannedArrival).getTime();
-            const dt = nowTs - passedTs;
-            if (dt > 90 * 1000 && sliced.length > 1) {
-              markerMode = 'between';
-              markerIdxInSliced = 0; // insert after first row in sliced
-            } else {
-              markerMode = 'on';
-              markerIdxInSliced = 0;
-            }
-          }
+          // Blink the next stop node (vehicle is heading towards it)
+          const blinkIdx = Math.min(1, Math.max(0, sliced.length - 1));
 
-          const items = [];
-          for (let i = 0; i < sliced.length; i++) {
-            items.push({ kind: 'stop', stop: sliced[i], idx: i });
-            if (markerMode === 'between' && i === markerIdxInSliced) {
-              items.push({ kind: 'pos', key: `pos-${startIdx + i}` });
-            }
-          }
+          const out = sliced.slice(0, stopoverLimit.value).map((s, idx) => ({
+            stop: s,
+            isBlink: idx === blinkIdx,
+            isWatched: isWatchedStop(s.stop.id),
+          }));
 
-          // Apply limit (count only stop items for limit, but keep marker if it falls within)
-          const out = [];
-          let stopCount = 0;
-          for (const it of items) {
-            if (it.kind === 'stop') {
-              stopCount++;
-              if (stopCount > stopoverLimit.value) break;
-            }
-            out.push(it);
-          }
           return out;
         });
 
@@ -1049,7 +1028,7 @@ import { createStationHandlers } from './stations.js';
           isTypeActive, toggleType, selectStation, onMainInput, clearSearch,
           formatTime, formatAbsTime, getDelayClass, isDeparted, getProductClass,
           onDurationChange: () => fetchDepartures(), expandedTripId, toggleTrip, isTripLoading,
-          currentTripStopovers, stopoverDisplayItems, stopoverLimit, formatPlannedWithDelay,
+          currentTripStopovers, stopoverDisplayStops, stopoverLimit, formatPlannedWithDelay, isWatchedStop,
           starredStations, isStarred, toggleStar,
           isShowingFavorites, showFavorites,
           isMainDropdownVisible, displaySearchResults, displayFavoriteResults, displayNearbyResults,
