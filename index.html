@@ -368,7 +368,21 @@
     }
     .stops-dashboard-item:hover { background: var(--hover-bg); }
     .stops-name { font-weight: 800; color: var(--text-main); font-size: 13px; }
-    .stops-meta { font-size: 12px; color: var(--text-sub); }
+    .stops-meta { font-size: 12px; color: var(--text-sub); display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+    .mini-action-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+    .mini-action-btn:hover { background: var(--hover-bg); color: var(--text-main); }
 
     /* WebKit scrollbar (Chrome/Edge/Safari) */
     .section-info::-webkit-scrollbar,
@@ -988,7 +1002,10 @@
               <div class="stops-dashboard-item" v-for="s in nearbyStations" :key="s.id" @click="selectStation(s)">
                 <div class="stops-name">{{ cleanName(s.name) }}</div>
                 <div class="stops-meta">
-                  <span v-if="typeof s.distance === 'number'">{{ Math.round(s.distance) }} m</span>
+                  <span v-if="typeof s.distance === 'number'" style="margin-right:8px;">{{ Math.round(s.distance) }} m</span>
+                  <button class="mini-action-btn" @click.stop="toggleStar(s)" :title="t.favorites">
+                    <i class="fas fa-star" :style="{ color: isStarred(s.id) ? 'var(--bvg-yellow)' : 'var(--text-muted)' }"></i>
+                  </button>
                 </div>
               </div>
             </div>
