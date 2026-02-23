@@ -1016,10 +1016,15 @@
               Noch keine Favoriten.
             </div>
             <div v-else class="stops-dashboard-list">
-              <div class="stops-dashboard-item" v-for="s in starredStations" :key="s.id" @click="selectStation(s)">
-                <div class="stops-name">{{ cleanName(s.name) }}</div>
+              <div class="stops-dashboard-item" v-for="s in starredStations" :key="s.id">
+                <div class="stops-name" @click="selectStation(s)">{{ cleanName(s.name) }}</div>
                 <div class="stops-meta">
-                  <i class="fas fa-star" style="color: var(--bvg-yellow);"></i>
+                  <button class="mini-action-btn" @click.stop="addTargetStation(s)" title="Add">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                  <button class="mini-action-btn" @click.stop="toggleStar(s)" :title="t.favorites">
+                    <i class="fas fa-star" style="color: var(--bvg-yellow);"></i>
+                  </button>
                 </div>
               </div>
             </div>
