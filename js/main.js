@@ -138,7 +138,11 @@ import { createStationHandlers } from './stations.js';
         });
 
         const starredStations = ref([]); 
-        const isShowingFavorites = ref(false); 
+        const isShowingFavorites = ref(false);
+
+        // Dashboard (no station selected) tabs
+        const dashboardStopsTab = ref('nearby'); // 'nearby' | 'favorites'
+
         
         const currentTheme = ref('dark'); 
         const isDarkMode = computed(() => currentTheme.value === 'dark' || currentTheme.value === 'led');
@@ -633,6 +637,10 @@ import { createStationHandlers } from './stations.js';
         const onS1Input = stations.onS1Input;
         const onS2Input = stations.onS2Input;
 
+        const nearbyStations = stations.nearbyStations;
+        const isGeoEnabled = stations.isGeoEnabled;
+        const refreshNearby = stations.refreshNearby;
+
         const selectStation = stations.selectStation;
         const setStation = stations.setStation;
         const clearStation = stations.clearStation;
@@ -969,6 +977,8 @@ import { createStationHandlers } from './stations.js';
           isShowingFavorites, showFavorites,
           isMainDropdownVisible, displaySearchResults, displayFavoriteResults, displayNearbyResults,
           onMainFocus, onMainBlur, onLocateClick,
+          nearbyStations, isGeoEnabled, refreshNearby,
+          dashboardStopsTab,
           isRadarActive, radarError, cleanName,
           isDarkMode, zoomIn, zoomOut,
           infoState, toggleInfoState, infoStateClass, sidebarMobileClass, toggleIcon,

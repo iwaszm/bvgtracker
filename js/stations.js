@@ -298,6 +298,11 @@ export function createStationHandlers({
     fetchDepartures();
   };
 
+  const refreshNearby = async () => {
+    if (!isGeoEnabled.value || !lastUserLocation.value) return;
+    await fetchNearbyStations(lastUserLocation.value);
+  };
+
   return {
     // favorites
     isStarred,
@@ -311,6 +316,11 @@ export function createStationHandlers({
     displaySearchResults,
     displayFavoriteResults,
     displayNearbyResults,
+
+    // expose nearby state for dashboard
+    nearbyStations,
+    isGeoEnabled,
+    refreshNearby,
 
     // search
     handleSearch,
