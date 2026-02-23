@@ -987,16 +987,16 @@
         <!-- Dashboard: show Nearby/Favorites stops when no station is selected -->
         <div v-else-if="!station1 && !station2" class="stops-dashboard">
           <div class="stops-dashboard-tabs">
-            <button class="stops-tab" :class="{ active: dashboardStopsTab === 'nearby' }" @click="dashboardStopsTab='nearby'; refreshNearby({ ensureEnabled: true })">In der Nähe</button>
-            <button class="stops-tab" :class="{ active: dashboardStopsTab === 'favorites' }" @click="dashboardStopsTab='favorites'">Favoriten</button>
+            <button class="stops-tab" :class="{ active: dashboardStopsTab === 'nearby' }" @click="dashboardStopsTab='nearby'; refreshNearby({ ensureEnabled: true })">{{ t.nearby }}</button>
+            <button class="stops-tab" :class="{ active: dashboardStopsTab === 'favorites' }" @click="dashboardStopsTab='favorites'">{{ t.favorites }}</button>
           </div>
 
           <div v-if="dashboardStopsTab === 'nearby'">
             <div v-if="!isGeoEnabled" class="text-muted small text-center py-4">
-              Tippe auf <i class="fas fa-location-crosshairs"></i>, um nahe Haltestellen zu laden.
+              {{ t.geoTapToLoadNearby }}
             </div>
             <div v-else-if="nearbyStations.length === 0" class="text-muted small text-center py-4">
-              Keine Haltestellen in 500m gefunden.
+              {{ t.noNearbyStops.replace('{d}', '1km') }}
             </div>
             <div v-else class="stops-dashboard-list">
               <div class="stops-dashboard-item" v-for="s in nearbyStations" :key="s.id" @click="selectStation(s)">
@@ -1019,9 +1019,6 @@
               <div class="stops-dashboard-item" v-for="s in starredStations" :key="s.id">
                 <div class="stops-name" @click="selectStation(s)">{{ cleanName(s.name) }}</div>
                 <div class="stops-meta">
-                  <button class="mini-action-btn" @click.stop="addTargetStation(s)" title="Add">
-                    <i class="fas fa-plus"></i>
-                  </button>
                   <button class="mini-action-btn" @click.stop="toggleStar(s)" :title="t.favorites">
                     <i class="fas fa-star" style="color: var(--bvg-yellow);"></i>
                   </button>

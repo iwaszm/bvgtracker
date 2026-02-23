@@ -162,7 +162,7 @@ export function createStationHandlers({
       params: {
         latitude,
         longitude,
-        distance: 500,
+        distance: 1000,
         results: 80,
         stops: true,
         poi: false,
