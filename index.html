@@ -316,7 +316,7 @@
         flex-grow: 1; 
         overflow-y: auto; 
         padding: 10px; 
-        padding-right: 16px; /* leave room for scrollbar (web) */
+        padding-right: 8px; /* leave small room for scrollbar (web) */
         overflow-x: hidden; 
         background-color: var(--bg-sidebar); 
         min-height: 0; 
@@ -331,7 +331,7 @@
     }
 
     /* Stops dashboard (when no station selected) */
-    .stops-dashboard { padding: 6px 2px 14px; padding-right: 8px; }
+    .stops-dashboard { padding: 6px 2px 14px; padding-right: 0; }
     .stops-dashboard-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -476,11 +476,21 @@
     .stopover-item { display: flex; align-items: center; padding: 3px 0; min-width: 0; }
     .stopover-time { font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; width: 70px; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
     .stopover-node { width: 6px; height: 6px; border-radius: 50%; background-color: #aaa; margin: 0 10px; flex-shrink: 0; }
+    .stopover-node.node-future { background-color: #555; }
     .blink { animation: blink 1.1s infinite; }
     @keyframes blink { 0%, 50%, 100% { opacity: 1; } 60%, 90% { opacity: 0.2; } }
 
-    .stopover-name { font-size: 12px; color: var(--text-sub); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .stopover-name.watched-stop { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 2px; }
+    .stopover-name { font-size: 12px; color: var(--text-sub); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:flex; align-items:center; gap:6px; }
+
+    .watched-triangle {
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 7px solid var(--bvg-yellow);
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
     .weiter-btn { width: 100%; background: none; border: 1px dashed var(--border-color); color: var(--text-muted); font-size: 11px; padding: 4px; margin-top: 8px; border-radius: 4px; }
     .weiter-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
 
@@ -720,6 +730,8 @@
     .led-mode .stopover-container { background-color: #111; border-top: 1px dashed #333; }
     .led-mode .stopover-time, .led-mode .stopover-name { font-family: 'VT323', monospace !important; color: #ffaa00 !important; font-size: 18px !important; text-transform: uppercase; }
     .led-mode .stopover-node { background-color: #ffaa00 !important; box-shadow: 0 0 6px rgba(255,170,0,0.35); }
+    .led-mode .stopover-node.node-future { background-color: #553300 !important; box-shadow: none; }
+    .led-mode .watched-triangle { border-top-color: #ffaa00; filter: drop-shadow(0 0 4px rgba(255,170,0,0.35)); }
     .led-mode .weiter-btn { border-color: #ffaa00 !important; color: #ffaa00 !important; font-family: 'VT323', monospace !important; font-size: 18px !important; letter-spacing: 1px; }
     .led-mode .weiter-btn:hover { background-color: #111 !important; }
 
@@ -1099,8 +1111,11 @@
              <div v-else>
                 <div class="stopover-item" v-for="it in stopoverDisplayStops" :key="it.stop.stop.id">
                    <div class="stopover-time">{{ formatPlannedWithDelay(it.stop) }}</div>
-                   <div class="stopover-node" :class="{ blink: it.isBlink }"></div>
-                   <div class="stopover-name" :class="{ 'watched-stop': it.isWatched }">{{ cleanName(it.stop.stop.name) }}</div>
+                   <div class="stopover-node" :class="{ blink: it.isBlink, 'node-future': it.isFuture }"></div>
+                   <div class="stopover-name">
+                     {{ cleanName(it.stop.stop.name) }}
+                     <span v-if="it.isWatched" class="watched-triangle" aria-hidden="true"></span>
+                   </div>
                 </div>
                 <button v-if="currentTripStopovers.length > stopoverLimit" class="weiter-btn" @click.stop="stopoverLimit += 5">{{ t.loadMore }}</button>
              </div>

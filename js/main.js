@@ -556,13 +556,13 @@ import { createStationHandlers } from './stations.js';
           // Blink the next stop node (vehicle is heading towards it)
           const blinkIdx = Math.min(1, Math.max(0, sliced.length - 1));
 
-          const out = sliced.slice(0, stopoverLimit.value).map((s, idx) => ({
+          return sliced.slice(0, stopoverLimit.value).map((s, idx) => ({
             stop: s,
+            idx,
             isBlink: idx === blinkIdx,
             isWatched: isWatchedStop(s.stop.id),
+            isFuture: idx > 0,
           }));
-
-          return out;
         });
 
         
