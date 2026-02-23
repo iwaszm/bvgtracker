@@ -697,22 +697,8 @@
     
     .vehicle-popup a.leaflet-popup-close-button { display: none; }
     .station-pos-marker { background-color: var(--bvg-yellow); border: 3px solid #ffffff; border-radius: 50%; width: 20px; height: 20px; box-shadow: 0 0 15px rgba(240, 228, 0, 0.8); box-sizing: border-box; }
-    .vehicle-marker-wrapper { position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; overflow: visible; }
+    .vehicle-marker-wrapper { position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
     .vehicle-marker { position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; color: white; font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; font-weight: bold; font-size: 10px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); border: 2px solid white; width: 28px; height: 28px; background-color: #555; cursor: pointer !important; pointer-events: auto; }
-    .vehicle-dir {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 0;
-      height: 0;
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
-      border-bottom: 6px solid rgba(255,255,255,0.95);
-      transform-origin: 0 0;
-      pointer-events: none;
-      z-index: 12;
-      filter: drop-shadow(0 0 2px rgba(0,0,0,0.35));
-    }
 
     .marker-bus { background-color: #A5027D; } .marker-tram { background-color: #CC0000; } .marker-subway { background-color: var(--ubahn-blue); } .marker-suburban { background-color: #008D4F; } .marker-regional { background-color: var(--db-red); } .marker-express { background-color: #fff; color: #333; border-color: #999; }
     .floating-menu { position: absolute; z-index: 2000; display: flex; gap: 4px; background-color: rgba(30, 30, 30, 0.85); backdrop-filter: blur(10px); padding: 6px; border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: var(--shadow-soft); transition: all 0.3s; }
