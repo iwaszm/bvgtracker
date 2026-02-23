@@ -794,19 +794,31 @@ import { createStationHandlers } from './stations.js';
                 const badgeStyle = `background-color: ${color}; color: white; padding: 2px 6px; border-radius: 4px; display: inline-block; line-height: 1.2; font-weight: 800;`;
                 const popupContent = `<div style="display: flex; align-items: center; gap: 8px;"><span class="vehicle-popup-badge" style="${badgeStyle}">${v.line.name}</span> <span>${cleanName(v.direction)}</span></div>`;
 
-                // Direction: derive bearing from last 2 frames (fallback: none)
+                const getBearingDeg = (fromLat, fromLon, toLat, toLon) => {
+                  const lat1 = fromLat * Math.PI / 180;
+                  const lat2 = toLat * Math.PI / 180;
+                  const dLon = (toLon - fromLon) * Math.PI / 180;
+                  const y = Math.sin(dLon) * Math.cos(lat2);
+                  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+                  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+                };
+
+                // Direction: derive bearing from last 2 frames, fallback to last marker position
                 let deg = null;
                 if (polylinePoints.length >= 2) {
                   const a = polylinePoints[polylinePoints.length - 2];
                   const b = polylinePoints[polylinePoints.length - 1];
-                  const lat1 = a[0] * Math.PI / 180;
-                  const lat2 = b[0] * Math.PI / 180;
-                  const dLon = (b[1] - a[1]) * Math.PI / 180;
-                  const y = Math.sin(dLon) * Math.cos(lat2);
-                  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-                  deg = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+                  deg = getBearingDeg(a[0], a[1], b[0], b[1]);
+                } else {
+                  if (!window.__vehicleLastPos) window.__vehicleLastPos = {};
+                  const prev = window.__vehicleLastPos[tripId];
+                  if (prev && typeof prev.lat === 'number' && typeof prev.lon === 'number') {
+                    deg = getBearingDeg(prev.lat, prev.lon, v.location.latitude, v.location.longitude);
+                  }
+                  window.__vehicleLastPos[tripId] = { lat: v.location.latitude, lon: v.location.longitude, ts: Date.now() };
                 }
-                const dirHtml = (deg === null) ? '' : `<div class="vehicle-dir" style="transform: translate(-50%, -50%) rotate(${deg}deg) translateY(-18px);"></div>`;
+
+                const dirHtml = (deg === null) ? '' : `<div class="vehicle-dir" style="transform: translate(-50%, -50%) rotate(${deg}deg) translateY(-19px);"></div>`;
                 const html = `<div class="vehicle-marker-wrapper">${dirHtml}<div class="vehicle-marker ${productClass}">${label}</div></div>`;
                 const icon = L.divIcon({ className: 'smooth-transition', html: html, iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16] });
 
@@ -968,6 +980,14 @@ import { createStationHandlers } from './stations.js';
             }
         };
 
+        const hasLineFilterChanges = computed(() => {
+          return (
+            excludedLines.value.size > 0 ||
+            Object.keys(terminalExclusions.value || {}).length > 0 ||
+            isTerminalFilterActive.value
+          );
+        });
+
         const resetLineFilters = () => {
             excludedLines.value.clear();
             terminalExclusions.value = {};
@@ -1054,7 +1074,7 @@ import { createStationHandlers } from './stations.js';
           isDarkMode, zoomIn, zoomOut,
           infoState, toggleInfoState, infoStateClass, sidebarMobileClass, toggleIcon,
           showSettings, setStation, clearStation, watchedStations,
-          filteredLineList, toggleLineExclusion, excludedLines, resetLineFilters,
+          filteredLineList, toggleLineExclusion, excludedLines, resetLineFilters, hasLineFilterChanges,
           isTerminalFilterActive, terminalFilterEnabled, terminalsByLine, isTerminalExcluded, toggleTerminalExclusion,
           station1, station2, s1Query, s2Query, s1Results, s2Results, onS1Input, onS2Input,
           showMap, toggleMap, resetStations,
