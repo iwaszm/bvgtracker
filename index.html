@@ -489,10 +489,12 @@
       height: 0;
       border-top: 4px solid transparent;
       border-bottom: 4px solid transparent;
-      border-left: 7px solid var(--text-muted); /* point to the station name */
+      border-left: 7px solid var(--text-muted);
       opacity: 0.9;
       flex-shrink: 0;
       margin-left: 2px;
+      transform: rotate(180deg);
+      transform-origin: center;
     }
     .weiter-btn { width: 100%; background: none; border: 1px dashed var(--border-color); color: var(--text-muted); font-size: 11px; padding: 4px; margin-top: 8px; border-radius: 4px; }
     .weiter-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
