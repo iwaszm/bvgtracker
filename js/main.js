@@ -777,7 +777,20 @@ import { createStationHandlers } from './stations.js';
 
         const terminalFilterAvailable = computed(() => {
           // Only allow terminal filter when there are <= 4 lines in the settings list.
-          return filteredLineList.value.length > 0 && filteredLineList.value.length <= 4;
+          // NOTE: compute from raw data to avoid referencing computed values before initialization.
+          const lines = new Set();
+          departuresRaw.value.forEach(d => {
+            if (!d.line || !d.line.name) return;
+            let p = d.line.product;
+            if (p === 'nationalExpress' || p === 'national') p = 'express';
+            if (p === 'regionalExp') p = 'regional';
+            if (!activeFilters.value.includes(p)) return;
+            if (p === 'express') return;
+            lines.add(d.line.name);
+          });
+          excludedLines.value.forEach(l => lines.add(l));
+          const cnt = lines.size;
+          return cnt > 0 && cnt <= 4;
         });
 
         const terminalFilterEnabled = computed(() => {
