@@ -332,7 +332,7 @@ import { createStationHandlers } from './stations.js';
 
                     const marker = L.marker([lat, lon], { icon: stationIcon })
                         .addTo(map)
-                        .bindTooltip(`<div><i class="fas fa-rss me-1 rss-icon"></i>${cleanName(station.name)}</div>`, {
+                        .bindTooltip(`<div>${cleanName(station.name)}</div>`, {
                             permanent: true, direction: 'top', offset: [0, -22], className: 'station-tooltip' 
                         });
                     
