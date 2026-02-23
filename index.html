@@ -521,14 +521,47 @@
         cursor: pointer; 
         text-align: center; 
         display: flex; 
+        flex-direction: column;
         align-items: center; 
         justify-content: center; 
         gap: 4px; 
         font-family: 'Roboto Mono', monospace; 
         font-weight: bold; 
+        min-width: 0;
     }
     .line-toggle.active { background-color: var(--bg-card); color: var(--text-main); border-color: #666; }
     .line-toggle.hidden-line { opacity: 0.5; text-decoration: line-through; }
+
+    .line-toggle-title { line-height: 1.1; }
+
+    .terminal-chip-row {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: center;
+    }
+
+    .terminal-chip {
+        max-width: 100%;
+        padding: 1px 6px;
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 700;
+        background: rgba(0,0,0,0.18);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: var(--text-sub);
+        line-height: 1.5;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        user-select: none;
+    }
+
+    .terminal-chip.excluded {
+        opacity: 0.35;
+        text-decoration: line-through;
+    }
 
 
     /* Map UI */
@@ -751,7 +784,21 @@
                           :class="{ 'active': !excludedLines.has(lineName), 'hidden-line': excludedLines.has(lineName) }"
                           @click="toggleLineExclusion(lineName)"
                         >
-                             {{ lineName }}
+                          <div class="line-toggle-title">{{ lineName }}</div>
+
+                          <!-- Terminal filter: only show when there are <= 4 lines -->
+                          <div v-if="terminalFilterEnabled && terminalsByLine[lineName] && terminalsByLine[lineName].length" class="terminal-chip-row" @click.stop>
+                            <span
+                              v-for="terminal in terminalsByLine[lineName]"
+                              :key="terminal"
+                              class="terminal-chip"
+                              :class="{ 'excluded': isTerminalExcluded(lineName, terminal) }"
+                              @click.stop="toggleTerminalExclusion(lineName, terminal)"
+                              :title="terminal"
+                            >
+                              {{ terminal }}
+                            </span>
+                          </div>
                         </div>
                     </div>
                     <div v-if="filteredLineList.length === 0" class="text-muted small text-center mt-2">
