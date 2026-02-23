@@ -406,14 +406,10 @@ import { createStationHandlers } from './stations.js';
           isTripLoading.value = true;
           try {
             const res = await axios.get(`${apiBase.value}/trips/${encodeURIComponent(dep.tripId)}`, { params: { stopovers: true } });
-            const allStops = res.data.trip.stopovers;
-            const departureTime = new Date(dep.when || dep.plannedWhen);
+            const allStops = res.data.trip.stopovers || [];
+            // Keep full stopover list (we will slice based on vehicle progress in computed)
+            currentTripStopovers.value = allStops.filter(stop => stop && stop.stop && stop.stop.id);
 
-            currentTripStopovers.value = allStops.filter(stop => {
-               const sTime = stop.arrival || stop.plannedArrival || stop.departure || stop.plannedDeparture;
-               if (!sTime) return false;
-               return new Date(sTime) > departureTime;
-            });
           } catch (e) { console.error(e); } finally { isTripLoading.value = false; }
         };
 
@@ -506,7 +502,89 @@ import { createStationHandlers } from './stations.js';
             }
         };
 
-        const visibleStopovers = computed(() => currentTripStopovers.value.slice(0, stopoverLimit.value));
+        const getStopPlannedTime = (stop) => {
+          return stop.plannedArrival || stop.plannedDeparture || stop.arrival || stop.departure || null;
+        };
+
+        const getStopDelaySec = (stop) => {
+          if (typeof stop.arrivalDelay === 'number') return stop.arrivalDelay;
+          if (typeof stop.departureDelay === 'number') return stop.departureDelay;
+
+          const planned = stop.plannedArrival || stop.plannedDeparture;
+          const realtime = stop.arrival || stop.departure;
+          if (planned && realtime) {
+            return Math.round((new Date(realtime) - new Date(planned)) / 1000);
+          }
+          return 0;
+        };
+
+        const formatPlannedWithDelay = (stop) => {
+          const planned = getStopPlannedTime(stop);
+          if (!planned) return '';
+          const abs = formatAbsTime(planned);
+          const d = getStopDelaySec(stop);
+          if (!d) return abs;
+          const min = Math.round(d / 60);
+          const sign = min > 0 ? '+' : '';
+          return `${abs} ${sign}${min}`;
+        };
+
+        const stopoverDisplayItems = computed(() => {
+          const list = currentTripStopovers.value || [];
+          if (list.length === 0) return [];
+
+          // find last passed stop (by realtime or planned)
+          const nowTs = now.value.getTime();
+          let lastPassed = -1;
+          for (let i = 0; i < list.length; i++) {
+            const st = list[i];
+            const t = st.departure || st.arrival || st.plannedDeparture || st.plannedArrival;
+            if (!t) continue;
+            if (new Date(t).getTime() <= nowTs) lastPassed = i;
+          }
+
+          const startIdx = Math.max(0, lastPassed);
+          const sliced = list.slice(startIdx);
+
+          // decide marker: on stop briefly after pass, else between passed and next
+          let markerMode = 'on'; // 'on' | 'between'
+          let markerIdxInSliced = 0;
+          if (lastPassed < 0) {
+            markerMode = 'on';
+            markerIdxInSliced = 0;
+          } else {
+            const passed = list[lastPassed];
+            const passedTs = new Date(passed.departure || passed.arrival || passed.plannedDeparture || passed.plannedArrival).getTime();
+            const dt = nowTs - passedTs;
+            if (dt > 90 * 1000 && sliced.length > 1) {
+              markerMode = 'between';
+              markerIdxInSliced = 0; // insert after first row in sliced
+            } else {
+              markerMode = 'on';
+              markerIdxInSliced = 0;
+            }
+          }
+
+          const items = [];
+          for (let i = 0; i < sliced.length; i++) {
+            items.push({ kind: 'stop', stop: sliced[i], idx: i });
+            if (markerMode === 'between' && i === markerIdxInSliced) {
+              items.push({ kind: 'pos', key: `pos-${startIdx + i}` });
+            }
+          }
+
+          // Apply limit (count only stop items for limit, but keep marker if it falls within)
+          const out = [];
+          let stopCount = 0;
+          for (const it of items) {
+            if (it.kind === 'stop') {
+              stopCount++;
+              if (stopCount > stopoverLimit.value) break;
+            }
+            out.push(it);
+          }
+          return out;
+        });
 
         
         // ==============================
@@ -971,7 +1049,7 @@ import { createStationHandlers } from './stations.js';
           isTypeActive, toggleType, selectStation, onMainInput, clearSearch,
           formatTime, formatAbsTime, getDelayClass, isDeparted, getProductClass,
           onDurationChange: () => fetchDepartures(), expandedTripId, toggleTrip, isTripLoading,
-          currentTripStopovers, visibleStopovers, stopoverLimit,
+          currentTripStopovers, stopoverDisplayItems, stopoverLimit, formatPlannedWithDelay,
           starredStations, isStarred, toggleStar,
           isShowingFavorites, showFavorites,
           isMainDropdownVisible, displaySearchResults, displayFavoriteResults, displayNearbyResults,

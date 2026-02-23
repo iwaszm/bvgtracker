@@ -476,6 +476,18 @@
     .stopover-item { display: flex; align-items: center; padding: 3px 0; min-width: 0; }
     .stopover-time { font-family: 'Roboto Mono', monospace; font-feature-settings: "tnum"; width: 45px; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
     .stopover-node { width: 6px; height: 6px; border-radius: 50%; background-color: #aaa; margin: 0 10px; flex-shrink: 0; }
+    .pos-triangle {
+      width: 0;
+      height: 0;
+      border-left: 3px solid transparent;
+      border-right: 3px solid transparent;
+      border-top: 6px solid #aaa; /* same visual size as stopover-node */
+      margin: 0 10px;
+      flex-shrink: 0;
+    }
+    .blink { animation: blink 1.1s infinite; }
+    @keyframes blink { 0%, 50%, 100% { opacity: 1; } 60%, 90% { opacity: 0.2; } }
+
     .stopover-name { font-size: 12px; color: var(--text-sub); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .weiter-btn { width: 100%; background: none; border: 1px dashed var(--border-color); color: var(--text-muted); font-size: 11px; padding: 4px; margin-top: 8px; border-radius: 4px; }
     .weiter-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
@@ -1093,10 +1105,17 @@
                 <div class="spinner-border spinner-border-sm text-secondary"></div>
              </div>
              <div v-else>
-                <div class="stopover-item" v-for="stop in visibleStopovers" :key="stop.stop.id">
-                   <div class="stopover-time">{{ formatAbsTime(stop.arrival || stop.plannedArrival || stop.departure) }}</div>
-                   <div class="stopover-node"></div>
-                   <div class="stopover-name">{{ cleanName(stop.stop.name) }}</div>
+                <div class="stopover-item" v-for="it in stopoverDisplayItems" :key="it.kind === 'stop' ? it.stop.stop.id : it.key">
+                   <template v-if="it.kind === 'stop'">
+                     <div class="stopover-time">{{ formatPlannedWithDelay(it.stop) }}</div>
+                     <div class="stopover-node"></div>
+                     <div class="stopover-name">{{ cleanName(it.stop.stop.name) }}</div>
+                   </template>
+                   <template v-else>
+                     <div class="stopover-time"></div>
+                     <div class="pos-triangle blink"></div>
+                     <div class="stopover-name"></div>
+                   </template>
                 </div>
                 <button v-if="currentTripStopovers.length > stopoverLimit" class="weiter-btn" @click.stop="stopoverLimit += 5">{{ t.loadMore }}</button>
              </div>
