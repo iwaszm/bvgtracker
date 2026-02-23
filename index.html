@@ -278,9 +278,18 @@
     }
 
     /* Terminal toggle button (same size as type filters) */
-    .type-btn.btn-terminal { font-weight: 900; letter-spacing: -0.5px; }
-    .type-btn.btn-terminal.disabled { opacity: 0.18; cursor: not-allowed; transform: none !important; }
-    .type-btn.btn-terminal.disabled:hover { opacity: 0.18; transform: none !important; }
+    .type-btn.btn-terminal {
+      opacity: 1;
+      background-color: #444;
+      color: #9aa0a6; /* gray flag when inactive */
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .type-btn.btn-terminal i { font-size: 12px; }
+    .type-btn.btn-terminal.active {
+      color: #ff4d4d; /* red flag when active */
+      border-color: rgba(255,77,77,0.6);
+      box-shadow: 0 0 0 2px rgba(255,77,77,0.12);
+    }
 
     input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 8px 0; }
     input[type=range]:focus { outline: none; }
@@ -781,11 +790,11 @@
                          </div>
                          <button
                            class="type-btn btn-terminal"
-                           :class="{ active: terminalFilterEnabled, disabled: !terminalFilterAvailable }"
-                           @click="terminalFilterAvailable && (isTerminalFilterActive = !isTerminalFilterActive)"
-                           :title="terminalFilterAvailable ? 'Terminal' : 'Terminal (max 4 lines)'"
+                           :class="{ active: terminalFilterEnabled }"
+                           @click="isTerminalFilterActive = !isTerminalFilterActive"
+                           title="Terminal"
                          >
-                           T
+                           <i class="fas fa-flag"></i>
                          </button>
                     </div>
 

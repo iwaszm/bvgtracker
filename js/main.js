@@ -775,31 +775,8 @@ import { createStationHandlers } from './stations.js';
 
         const isTerminalFilterActive = ref(false);
 
-        const terminalFilterAvailable = computed(() => {
-          // Only allow terminal filter when there are <= 4 lines in the settings list.
-          // NOTE: compute from raw data to avoid referencing computed values before initialization.
-          const lines = new Set();
-          departuresRaw.value.forEach(d => {
-            if (!d.line || !d.line.name) return;
-            let p = d.line.product;
-            if (p === 'nationalExpress' || p === 'national') p = 'express';
-            if (p === 'regionalExp') p = 'regional';
-            if (!activeFilters.value.includes(p)) return;
-            if (p === 'express') return;
-            lines.add(d.line.name);
-          });
-          excludedLines.value.forEach(l => lines.add(l));
-          const cnt = lines.size;
-          return cnt > 0 && cnt <= 4;
-        });
-
-        const terminalFilterEnabled = computed(() => {
-          return terminalFilterAvailable.value && isTerminalFilterActive.value;
-        });
-
-        watch(terminalFilterAvailable, (ok) => {
-          if (!ok) isTerminalFilterActive.value = false;
-        });
+        // Terminal filter can be enabled at any time from settings.
+        const terminalFilterEnabled = computed(() => isTerminalFilterActive.value);
 
         const terminalsByLine = computed(() => {
           const tmp = {};
@@ -914,6 +891,8 @@ import { createStationHandlers } from './stations.js';
 
         const resetLineFilters = () => {
             excludedLines.value.clear();
+            terminalExclusions.value = {};
+            isTerminalFilterActive.value = false;
         };
 
         const isDeparted = (dep) => (new Date(dep.when || dep.plannedWhen) - now.value) <= 0;
@@ -995,7 +974,7 @@ import { createStationHandlers } from './stations.js';
           infoState, toggleInfoState, infoStateClass, sidebarMobileClass, toggleIcon,
           showSettings, setStation, clearStation, watchedStations,
           filteredLineList, toggleLineExclusion, excludedLines, resetLineFilters,
-          isTerminalFilterActive, terminalFilterAvailable, terminalFilterEnabled, terminalsByLine, isTerminalExcluded, toggleTerminalExclusion,
+          isTerminalFilterActive, terminalFilterEnabled, terminalsByLine, isTerminalExcluded, toggleTerminalExclusion,
           station1, station2, s1Query, s2Query, s1Results, s2Results, onS1Input, onS2Input,
           showMap, toggleMap, resetStations,
           t, currentLang, toggleLang,
