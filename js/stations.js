@@ -158,17 +158,18 @@ export function createStationHandlers({
   // Geolocation -> nearby stations
   // ------------------------------
   const fetchNearbyStations = async ({ latitude, longitude }) => {
-    const res = await axios.get(`${apiBase.value}/stops/nearby`, {
+    const res = await axios.get(`${apiBase.value}/locations/nearby`, {
       params: {
         latitude,
         longitude,
         distance: 500,
         results: 80,
+        stops: true,
+        poi: false,
       },
     });
 
-    // /stops/nearby returns stops directly
-    const stops = (res.data || []).filter((s) => (s.type || 'stop') === 'stop');
+    const stops = (res.data || []).filter((s) => (s.type || '') === 'stop');
     nearbyStations.value = stops;
   };
 
